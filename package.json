@@ -1,0 +1,57 @@
+{
+  "author": "Luca Zampetti <lzampetti@gmail.com>",
+  "name": "rxcomp-router",
+  "description": "Reactive RouterModule for RxComp component library",
+  "version": "1.0.0-beta.12",
+  "browser": "dist/umd/rxcomp-router.js",
+  "main": "dist/cjs/rxcomp-router.js",
+  "types": "dist/cjs/rxcomp-router.d.ts",
+  "es2015": "dist/esm/rxcomp-router.js",
+  "files": [
+    "dist/",
+    "!.DS_Store"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "rxcomp",
+    "framework",
+    "server",
+    "rxjs",
+    "es6",
+    "es2015"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/actarian/rxcomp-router.git"
+  },
+  "bugs": {
+    "url": "https://github.com/actarian/rxcomp-router/issues"
+  },
+  "homepage": "https://github.com/actarian/rxcomp-router",
+  "scripts": {
+    "start": "gulp",
+    "build": "gulp build --target dist",
+    "docs": "typedoc --options typedoc.json",
+    "docs2": "typedoc --out docs/documentation src/rxcomp-router.ts --mode modules --theme default --includeDeclarations --excludeExternals --excludePrivate --excludeNotExported",
+    "serve": "node www/server/index.js"
+  },
+  "dependencies": {
+    "htmlparser2": "~4.1.0",
+    "rxjs": "~6.6.2",
+    "rxcomp": "~1.0.0-beta.12",
+    "tslib": "~2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "~14.0.27",
+    "body-parser": "~1.19.0",
+    "cross-fetch": "^3.0.5",
+    "events": "~3.2.0",
+    "express": "~4.17.1",
+    "express-graphql": "~0.11.0",
+    "graphql": "~15.3.0",
+    "gulpfile-config": "~1.0.0-alpha.13",
+    "https": "~1.0.0",
+    "typedoc": "~0.17.8",
+    "typescript": "~3.9.7"
+  }
+}

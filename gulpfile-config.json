@@ -1,0 +1,120 @@
+﻿{
+  "targets": {
+    "browser": {
+      "compile": [
+        {
+          "input": "www/browser/*.html",
+          "output": "docs/",
+          "minify": false
+        },
+        {
+          "input": "www/browser/css/main.scss",
+          "output": "docs/css/main.css",
+          "minify": true
+        },
+        {
+          "input": "www/browser/src/main.browser.ts",
+          "output": {
+            "file": "docs/js/main.js",
+            "format": "iife"
+          },
+          "globals": {
+            "rxjs": "rxjs",
+            "rxjs/operators": "rxjs.operators",
+            "rxcomp": "rxcomp"
+          },
+          "minify": true
+        }
+      ],
+      "bundle": [
+        {
+          "input": [
+            "node_modules/rxjs/bundles/rxjs.umd.js",
+            "../rxcomp/dist/iife/rxcomp.js"
+          ],
+          "output": "docs/js/vendors.js",
+          "minify": true
+        }
+      ]
+    },
+    "www": {
+      "compile": [
+        {
+          "input": "www/browser/*.html",
+          "output": "www/dist/development/browser/",
+          "minify": false
+        },
+        {
+          "input": "www/browser/css/main.scss",
+          "output": "www/dist/development/browser/css/main.css",
+          "minify": true
+        },
+        {
+          "input": "www/browser/src/main.browser.ts",
+          "output": {
+            "file": "www/dist/development/browser/js/main.js",
+            "format": "iife"
+          },
+          "globals": {
+            "rxjs": "rxjs",
+            "rxjs/operators": "rxjs.operators",
+            "rxcomp": "rxcomp"
+          },
+          "minify": true
+        }
+      ],
+      "bundle": [
+        {
+          "input": [
+            "node_modules/rxjs/bundles/rxjs.umd.js",
+            "../rxcomp/dist/iife/rxcomp.js"
+          ],
+          "output": "www/dist/development/browser/js/vendors.js",
+          "minify": true
+        }
+      ]
+    },
+    "dist": {
+      "compile": [
+        {
+          "input": "src/rxcomp-router.ts",
+          "output": [
+            {
+              "file": "dist/cjs/",
+              "format": "cjs"
+            },
+            {
+              "file": "dist/esm/",
+              "format": "esm"
+            },
+            {
+              "file": "dist/umd/rxcomp-router.js",
+              "format": "umd",
+              "minify": true
+            },
+            {
+              "file": "dist/iife/rxcomp-router.js",
+              "format": "iife",
+              "minify": true
+            }
+          ],
+          "globals": {
+            "htmlparser2": "htmlparser2",
+            "rxjs": "rxjs",
+            "rxjs/operators": "rxjs.operators",
+            "rxcomp": "rxcomp"
+          },
+          "name": "rxcomp.router"
+        }
+      ]
+    }
+  },
+  "server": {
+    "src": "./docs",
+    "path": "/rxcomp-router/",
+    "host": "localhost",
+    "port": 40991,
+    "log": false
+  },
+  "tfs": false
+}

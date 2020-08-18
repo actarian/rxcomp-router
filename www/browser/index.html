@@ -1,0 +1,32 @@
+<!-- @@master = ./templates/layout.html { "class": "page--test", "title": "RxCompRouter" } -->
+<!-- @@block = main-->
+<main class="app" app-component>
+	<div class="app__inner">
+		<!-- @@include ./templates/shared/header.html -->
+		<div class="container">
+			<ul class="nav--menu">
+				<li><a routerLink="/" routerLinkActive="active">Dashboard</a></li>
+				<li><a routerLink="/detail/1" routerLinkActive="active">Detail</a></li>
+				<li><a routerLink="/contacts" routerLinkActive="active">Contacts</a></li>
+				<li><a routerLink="/not-found" routerLinkActive="active">NotFound</a></li>
+			</ul>
+			<router-outlet></router-outlet>
+			<!-- {{items | json}} -->
+			<!--
+			<ul class="list">
+				<li class="list__item" *for="let item of items" [class]="{ completed: item.completed }" [style]="{ 'border-color': item.completed ? 'red' : 'black' }" (click)="onClick(item)">
+					<div class="title" [innerHTML]="item.title"></div>
+					<div class="completed">{{item.completed}}</div>
+				</li>
+			</ul>
+			-->
+			<div *if="error">
+				<span>error => {{error | json}}</span>
+			</div>
+		</div>
+	</div>
+</main>
+<!-- @@close-->
+<!-- @@block = js-->
+<script src="/rxcomp-router/js/main.js"></script>
+<!-- @@close-->
