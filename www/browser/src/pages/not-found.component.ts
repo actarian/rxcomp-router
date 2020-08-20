@@ -1,6 +1,8 @@
 import { Component, IFactoryMeta } from 'rxcomp';
+import { RouterOutletStructure } from '../../../../src/rxcomp-router';
 
 export default class NotFoundComponent extends Component {
+    host!: RouterOutletStructure;
     onInit() {
         // console.log('NotFoundComponent.onInit');
     }

@@ -1,6 +1,6 @@
 import { Route } from '../route/route';
 import { RouteSnapshot } from '../route/route-snapshot';
-import { RouterLink } from '../router.types';
+import { RouteComponent, RouterLink } from '../router.types';
 
 export interface IRouterEvent {
     id?: number;
@@ -16,6 +16,7 @@ export interface IRouterEvent {
     previousNavigation?: IRouterEvent | null;
     route?: Route | RouteSnapshot;
     reason?: string;
+    redirectTo?: RouteComponent[];
     error?: any;
 }
 
@@ -94,6 +95,7 @@ export class NavigationEnd extends RouterEvent {
 // An event triggered when navigation is canceled. This is due to a Route Guard returning false during navigation.
 export class NavigationCancel extends RouterEvent {
     reason!: string;
+    redirectTo?: RouteComponent[];
 }
 // An event triggered when navigation fails due to an unexpected error.
 export class NavigationError extends RouterEvent {

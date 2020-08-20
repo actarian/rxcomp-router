@@ -1,7 +1,8 @@
 import { Directive, getContext, IFactoryMeta } from 'rxcomp';
 import { fromEvent, Observable } from 'rxjs';
 import { shareReplay, takeUntil } from 'rxjs/operators';
-import { INavigationExtras, serializeUrl_ } from '../route/route';
+import { INavigationExtras } from '../route/route';
+import { RoutePath } from '../route/route-path';
 import { RouteSegment } from '../route/route-segment';
 import { RouteComponent, RouterLink } from '../router.types';
 import RouterService from './router.service';
@@ -19,8 +20,8 @@ export default class RouterLinkDirective extends Directive {
     }
 
     getSegments(routerLink: RouteComponent[]): RouteSegment[] {
-        const segments: RouteSegment[] = [];
         // console.log('RouterLinkDirective.getSegments', routerLink);
+        const segments: RouteSegment[] = [];
         routerLink.forEach(item => {
             if (typeof item === 'string') {
                 const regExp: RegExp = /([^:]+)|\:([^\/]+)/g;
@@ -40,7 +41,6 @@ export default class RouterLinkDirective extends Directive {
             } else {
                 segments.push(new RouteSegment('', {}));
             }
-            // console.log(segments);
         });
         return segments;
     }
@@ -65,18 +65,13 @@ export default class RouterLinkDirective extends Directive {
             takeUntil(this.unsubscribe$)
         ).subscribe(event => {
             // console.log('RouterLinkDirective', event, this.routerLink);
+            // !!! skipLocationChange
             const navigationExtras: INavigationExtras = {
                 skipLocationChange: this.skipLocationChange,
                 replaceUrl: this.replaceUrl,
                 state: this.state,
             };
             RouterService.setRouterLink(this.routerLink, navigationExtras);
-            // RouterService.navigateByUrl(this.urlTree, extras);
-            /*
-            setTimeout(function () {
-                event.target?.dispatchEvent(event);
-            }, 1);
-            */
             event.preventDefault();
             return false;
         });
@@ -84,7 +79,8 @@ export default class RouterLinkDirective extends Directive {
 
     onChanges() {
         const { node } = getContext(this);
-        node.setAttribute('href', serializeUrl_(this.routerLink));
+        const routePath: RoutePath = RouterService.getPath(this.routerLink_);
+        node.setAttribute('href', routePath.url);
     }
 
     static meta: IFactoryMeta = {

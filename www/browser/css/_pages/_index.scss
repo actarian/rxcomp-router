@@ -91,6 +91,40 @@ body {
 	}
 }
 
+.title {
+	font-size: 1.2em;
+	font-weight: 500;
+}
+
+.params {
+	white-space: pre;
+	font-family: monospace;
+	font-size: 15px;
+	letter-spacing: 0.1em;
+	color: #ccc;
+}
+
+.nav--menu {
+	@extend %nav-vertical;
+	margin-bottom: 1em;
+
+	&>li {
+		@extend %nav-item;
+
+		a {
+			transition: all ease-in-out 350ms;
+
+			&:hover {
+				background: black;
+			}
+
+			&.active {
+				background: rgb(57, 2, 2);
+			}
+		}
+	}
+}
+
 /*
 json-component {
 	display: block;

@@ -2,7 +2,7 @@ import { Component, Factory } from 'rxcomp';
 import { Observable } from 'rxjs';
 import { Data, RouteComponent, RouterKeyValue, RouterLink } from '../router.types';
 import { ICanActivate, ICanActivateChild, ICanDeactivate, ICanLoad, mapCanActivate$_, mapCanActivateChild$_, mapCanDeactivate$_, mapCanLoad$_ } from './route-activators';
-import { RouteSegment } from './route-segment';
+import { encodeParams_, RouteSegment } from './route-segment';
 import { RouteSnapshot } from './route-snapshot';
 
 export type IRoutes = IRoute[];
@@ -58,8 +58,10 @@ export class Route implements IBaseRoute {
     segments: RouteSegment[];
     relative: boolean = true;
     children?: Routes;
+    parent?: Route;
+    snapshot?: RouteSnapshot;
     canDeactivate: ((component: Factory, currentRoute: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[] = [];
-    canLoad: ((route: Route, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]>)[] = [];
+    canLoad: ((route: RouteSnapshot, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]>)[] = [];
     canActivate: ((route: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[] = [];
     canActivateChild: ((childRoute: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[] = [];
     constructor(options?: IRoute) {
@@ -71,8 +73,10 @@ export class Route implements IBaseRoute {
             this.canActivateChild = options.canActivateChild ? options.canActivateChild.map(x => mapCanActivateChild$_(x)) : [];
         }
         if (this.children) {
-            this.children = this.children.map((route: IBaseRoute) => {
-                return new Route(route);
+            this.children = this.children.map((iRoute: IBaseRoute) => {
+                const route = new Route(iRoute);
+                route.parent = this;
+                return route;
             });
         }
         const segments: RouteSegment[] = [];
@@ -111,7 +115,9 @@ export class Route implements IBaseRoute {
 
 export function serializeUrl_(routerLink: RouterLink): string {
     const segments: any[] = Array.isArray(routerLink) ? routerLink : [routerLink];
-    return segments.join('/');
+    return segments.map(x => {
+        return typeof x === 'string' ? x : encodeParams_(x);
+    }).join('/');
 }
 
 /*

@@ -6,8 +6,11 @@
 		<div class="container">
 			<ul class="nav--menu">
 				<li><a routerLink="/" routerLinkActive="active">Dashboard</a></li>
-				<li><a routerLink="/detail/1" routerLinkActive="active">Detail</a></li>
+				<li><a [routerLink]="['/detail', 1]" routerLinkActive="active">Detail</a></li>
 				<li><a routerLink="/contacts" routerLinkActive="active">Contacts</a></li>
+				<li>
+					<a [routerLink]="['/data', { a: 'a', b: 'b', c: ['c','d'] }]" routerLinkActive="active">Data</a>
+				</li>
 				<li><a routerLink="/not-found" routerLinkActive="active">NotFound</a></li>
 			</ul>
 			<router-outlet></router-outlet>

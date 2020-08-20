@@ -1,6 +1,5 @@
 import { isObservable, Observable, Observer, Subscription } from 'rxjs';
 import { RouteComponent, RouterActivatorResult } from '../router.types';
-import { Route } from './route';
 import { RouteSegment } from './route-segment';
 import { RouteSnapshot } from './route-snapshot';
 
@@ -9,7 +8,7 @@ export interface ICanDeactivate<T> {
 }
 
 export interface ICanLoad {
-    canLoad(route: Route, segments: RouteSegment[]): RouterActivatorResult
+    canLoad(route: RouteSnapshot, segments: RouteSegment[]): RouterActivatorResult
 }
 
 export interface ICanActivate {
@@ -25,8 +24,8 @@ export function mapCanDeactivate$_<T>(activator: ICanDeactivate<T>): (component:
         return makeObserver$_(() => activator.canDeactivate(component, currentRoute));
     };
 }
-export function mapCanLoad$_(activator: ICanLoad): (route: Route, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]> {
-    return function canLoad$$(route: Route, segments: RouteSegment[]): Observable<boolean | RouteComponent[]> {
+export function mapCanLoad$_(activator: ICanLoad): (route: RouteSnapshot, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]> {
+    return function canLoad$$(route: RouteSnapshot, segments: RouteSegment[]): Observable<boolean | RouteComponent[]> {
         return makeObserver$_(() => activator.canLoad(route, segments));
     };
 }

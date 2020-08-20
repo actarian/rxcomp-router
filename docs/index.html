@@ -23,7 +23,9 @@
 	<link rel="mask-icon" href="/rxcomp-router/img/safari-pinned-tab.svg" color="#5bbad5">
 	<meta name="msapplication-TileColor" content="#212121">
 	<meta name="theme-color" content="#ffffff">
+	<!-- 
 	<link href="https://fonts.googleapis.com/css?family=Poppins:400,600&display=swap" rel="stylesheet">
+	-->
 	<link rel="stylesheet" href="/rxcomp-router/css/main.min.css" />
 <!-- start css -->
 
@@ -53,8 +55,11 @@
 		<div class="container">
 			<ul class="nav--menu">
 				<li><a routerLink="/" routerLinkActive="active">Dashboard</a></li>
-				<li><a routerLink="/detail/1" routerLinkActive="active">Detail</a></li>
+				<li><a [routerLink]="['/detail', 1]" routerLinkActive="active">Detail</a></li>
 				<li><a routerLink="/contacts" routerLinkActive="active">Contacts</a></li>
+				<li>
+					<a [routerLink]="['/data', { a: 'a', b: 'b', c: ['c','d'] }]" routerLinkActive="active">Data</a>
+				</li>
 				<li><a routerLink="/not-found" routerLinkActive="active">NotFound</a></li>
 			</ul>
 			<router-outlet></router-outlet>

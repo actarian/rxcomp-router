@@ -1,15 +1,21 @@
 import { Component, IFactoryMeta } from 'rxcomp';
 import { takeUntil } from 'rxjs/operators';
-import { RouteSnapshot } from '../../../../src/router/router.service';
-import { RouterOutletStructure } from '../../../../src/rxcomp-router';
+import { RouterKeyValue, RouterOutletStructure } from '../../../../src/rxcomp-router';
 
 export default class SubComponent extends Component {
+    host!: RouterOutletStructure;
     onInit() {
-        (this.host.route as RouteSnapshot).data$.pipe(
-            takeUntil(this.unsubscribe$),
-        ).subscribe((data) => this.title = data.title);
+        const route = this.host.route;
+        if (route) {
+            route.data$.pipe(
+                takeUntil(this.unsubscribe$)
+            ).subscribe((data: RouterKeyValue) => {
+                this.title = data.title;
+                // this.pushChanges(); // !!not needed;
+                // console.log('SubComponent', data);
+            });
+        }
     }
-
     static meta: IFactoryMeta = {
         selector: '[sub-component]',
         hosts: { host: RouterOutletStructure },
