@@ -38,7 +38,7 @@ export function getSlug(url) {
 		return url;
 	}
 	if (STATIC) {
-		console.log(url);
+		// console.log(url);
 		return url;
 	}
 	url = url.replace(`/${ENV.NAME}`, '');

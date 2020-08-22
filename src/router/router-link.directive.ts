@@ -8,7 +8,7 @@ import { RouteComponent, RouterLink } from '../router.types';
 import RouterService from './router.service';
 
 export default class RouterLinkDirective extends Directive {
-
+    path!: RoutePath;
     segments!: RouteSegment[];
     private routerLink_!: RouteComponent[];
     get routerLink(): RouterLink {
@@ -45,19 +45,6 @@ export default class RouterLinkDirective extends Directive {
         return segments;
     }
 
-    /*
-    get urlTree(): UrlTree {
-        return RouterService.createUrlTree(this.routerLink, {
-            relativeTo: this.route,
-            queryParams: this.queryParams,
-            fragment: this.fragment,
-            preserveQueryParams: this.preserve,
-            queryParamsHandling: this.queryParamsHandling,
-            preserveFragment: this.preserveFragment,
-        });
-    }
-    */
-
     onInit() {
         const { node } = getContext(this);
         const event$: Observable<Event> = fromEvent<Event>(node, 'click').pipe(shareReplay(1));
@@ -80,6 +67,7 @@ export default class RouterLinkDirective extends Directive {
     onChanges() {
         const { node } = getContext(this);
         const routePath: RoutePath = RouterService.getPath(this.routerLink_);
+        // console.log('RouterLinkDirective.routePath', routePath);
         node.setAttribute('href', routePath.url);
     }
 
@@ -88,3 +76,16 @@ export default class RouterLinkDirective extends Directive {
         inputs: ['routerLink'],
     };
 }
+
+/*
+get urlTree(): UrlTree {
+    return RouterService.createUrlTree(this.routerLink, {
+        relativeTo: this.route,
+        queryParams: this.queryParams,
+        fragment: this.fragment,
+        preserveQueryParams: this.preserve,
+        queryParamsHandling: this.queryParamsHandling,
+        preserveFragment: this.preserveFragment,
+    });
+}
+*/

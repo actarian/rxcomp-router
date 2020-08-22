@@ -1,9 +1,11 @@
+import { ILocationStrategy, LocationStrategy } from '../location/location.strategy';
 import { RouterKeyValue } from '../router.types';
 import { Route } from './route';
 import { RouteSegment } from './route-segment';
 
 export interface IRoutePath {
     url?: string;
+    prefix?: string;
     path?: string;
     query?: string;
     search?: any;
@@ -20,8 +22,12 @@ export class RoutePath implements IRoutePath {
     set url(url: string) {
         // console.log(this.url_, url);
         if (this.url_ !== url) {
-            this.url_ = url;
-            resolvePath_(url, this);
+            this.locationStrategy.resolve(url, this);
+            // resolvePath_(url, this, this.locationStrategy);
+            this.url_ = this.locationStrategy.serialize(this);
+            // serializeUrl_(this, this.locationStrategy);
+            // this.url_ = url; // !!! serialize url;
+            // console.log('url_', this.url_);
         }
     }
     private routeSegments_!: RouteSegment[];
@@ -31,20 +37,25 @@ export class RoutePath implements IRoutePath {
     set routeSegments(routeSegments: RouteSegment[]) {
         if (this.routeSegments_ !== routeSegments) {
             this.routeSegments_ = routeSegments;
-            this.params = resolveParams_(this.path, routeSegments);
+            // !!! const path: string = this.locationStrategy === RouteLocationStrategy.Hash ? this.hash : this.path;
+            // this.params = resolveParams_(this.path, routeSegments);
+            this.params = this.locationStrategy.resolveParams(this.path, routeSegments);
         }
     }
     get remainUrl(): string {
         return this.query + this.hash;
     }
-    path!: string;
-    query!: string;
+    prefix: string = '';
+    path: string = '';
+    query: string = '';
+    search: string = '';
+    hash: string = '';
     params!: { [key: string]: any };
-    search!: string;
-    hash!: string;
     segments!: string[];
     route?: Route;
-    constructor(url: string = '', routeSegments: RouteSegment[] = [], snapshot?: Route) {
+    locationStrategy: ILocationStrategy;
+    constructor(url: string = '', routeSegments: RouteSegment[] = [], snapshot?: Route, locationStrategy?: ILocationStrategy) {
+        this.locationStrategy = locationStrategy || new LocationStrategy();
         this.url = url;
         this.routeSegments = routeSegments;
         this.route = snapshot;
@@ -57,7 +68,20 @@ export class RoutePath implements IRoutePath {
     */
 }
 
-export function resolvePath_(url: string, target: IRoutePath = {}): IRoutePath {
+/*
+
+export function serializeUrl_(target: IRoutePath, locationStrategy: ILocationStrategy): string {
+    // return `${target.path!}${target.search}${target.hash}`;
+    return locationStrategy.serialize(target);
+}
+
+// !!! todo: resolvePath_ in LocationStrategy interface
+
+export function resolvePath_(url: string, target: IRoutePath = {}, locationStrategy: ILocationStrategy): IRoutePath {
+    return locationStrategy.resolve(url, target);
+}
+
+export function resolveStrategyPath_(url: string, target: IRoutePath = {}): IRoutePath {
     let path: string = '';
     let query: string = '';
     let hash: string = '';
@@ -79,7 +103,7 @@ export function resolvePath_(url: string, target: IRoutePath = {}): IRoutePath {
     }
     target.path = path;
     target.query = query;
-    target.hash = hash;
+    target.hash = hash.substring(1, hash.length);
     target.search = query.substring(1, query.length);
     // let search: string = target.search = query.substring(1, query.length);
     // const path: string = target.path = url.split('?')[0];
@@ -88,9 +112,44 @@ export function resolvePath_(url: string, target: IRoutePath = {}): IRoutePath {
     // const hash: string = target.hash = query.substring(search.length, query.length);
     target.segments = path.split('/').filter(x => x !== '');
     target.params = {};
+    // console.log('resolvePath_', url, path, query, target.search, hash, target.segments, target.params);
+    return target;
+}
+export function resolveStrategyHash_(url: string, target: IRoutePath = {}): IRoutePath {
+    let path: string = '';
+    let query: string = '';
+    let hash: string = '';
+    const regExp: RegExp = /^(\/)?(\?[^\#]*)?(\#.*)$/gm;
+    const matches = url.matchAll(regExp);
+    for (let match of matches) {
+        const g1 = match[1];
+        const g2 = match[2];
+        const g3 = match[3];
+        if (g1) {
+            path = g1;
+        }
+        if (g2) {
+            query = g2;
+        }
+        if (g3) {
+            hash = g3;
+        }
+    }
+    target.path = path;
+    target.query = query;
+    target.hash = hash.substring(1, hash.length);
+    target.search = query.substring(1, query.length);
+    // let search: string = target.search = query.substring(1, query.length);
+    // const path: string = target.path = url.split('?')[0];
+    // const query: string = target.query = url.substring(path.length, url.length);
+    // const search: string = target.search = query.split('#')[0];
+    // const hash: string = target.hash = query.substring(search.length, query.length);
+    target.segments = hash.split('/').filter(x => x !== '');
+    target.params = {};
     // console.log('resolvePath_', url, path, query, search, hash, segments, params);
     return target;
 }
+*/
 
 export function resolveParams_(path: string, routeSegments: RouteSegment[]): { [key: string]: any } {
     const segments: string[] = path.split('/').filter(x => x !== '');
@@ -104,7 +163,6 @@ export function resolveParams_(path: string, routeSegments: RouteSegment[]): { [
     });
     return params;
 }
-
 export function decodeParams_(encoded: string | null = null): any | null {
     let decoded: any | null = encoded;
     if (encoded) {
@@ -123,7 +181,6 @@ export function decodeParams_(encoded: string | null = null): any | null {
     }
     return decoded;
 }
-
 export function encodeParams_(value: any): string | null {
     let encoded: string | null = null;
     try {
@@ -139,21 +196,23 @@ export function encodeParams_(value: any): string | null {
     }
     return encoded;
 }
-
+export function decodeSegment_(s: string): string {
+    return decodeString_(s.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
+}
+export function encodeSegment_(s: string): string {
+    return encodeString_(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
+}
+export function decodeString_(s: string): string {
+    return decodeURIComponent(s.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
+}
+export function encodeString_(s: string): string {
+    return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+}
 /*
 export function encodeParams_(params: RouterKeyValue): string {
     // !!! array?
     return Object.keys(params).map(key => `;${encodeSegment_(key)}=${typeof params[key] === 'string' ? encodeSegment_(params[key] as string) : encodeParams_(params[key] as RouterKeyValue)}`).join('');
 }
-
-export function encodeSegment_(s: string): string {
-    return encodeString_(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
-}
-
-export function encodeString_(s: string): string {
-    return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
-}
-
 export function decodeParams_(encodedParams: string): RouterKeyValue {
     const params: RouterKeyValue = {} as RouterKeyValue;
     const keyValues = encodedParams.split(';');
@@ -165,9 +224,8 @@ export function decodeParams_(encodedParams: string): RouterKeyValue {
     });
     return params;
 }
-
 export function resolvePath___(url: string, routeSegments: RouteSegment[]): { path: string, search: string, hash: string, segments: any[] } {
-    console.log('resolvePath_.resolvedRoute.routeSegments', routeSegments);
+    // console.log('resolvePath_.resolvedRoute.routeSegments', routeSegments);
     const path: string = url.split('?')[0];
     const query: string = url.substring(path.length, url.length);
     const search: string = query.split('#')[0];

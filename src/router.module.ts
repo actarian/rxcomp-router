@@ -1,5 +1,6 @@
 import { Factory, IModuleMeta, Module, Pipe } from 'rxcomp';
 import { takeUntil, tap } from 'rxjs/operators';
+import { LocationStrategy } from './location/location.strategy';
 import { IRoute } from './route/route';
 import { NavigationCancel, NavigationEnd, NavigationError, RouterEvent } from './router/router-events';
 import RouterLinkActiveDirective from './router/router-link-active.directive';
@@ -24,10 +25,13 @@ const pipes: typeof Pipe[] = [
  * AppModule.meta = {
  *  imports: [
  *   CoreModule,
- *    RouterModule
+ *   RouterModule.forRoot([
+ *    { path: '', redirectTo: '/index', pathMatch: 'full' },
+ *    { path: 'index', component: IndexComponent, data: { title: 'Index' } }
+ *   ])
  *  ],
  *  declarations: [
- *   ErrorsComponent
+ *   IndexComponent
  *  ],
  *  bootstrap: AppComponent,
  * };
@@ -50,7 +54,7 @@ export default class RouterModule extends Module {
 			}),
 			takeUntil(this.unsubscribe$),
 		).subscribe();
-		RouterService.navigate(window.location.pathname + window.location.search + window.location.hash);
+		RouterService.navigate(`${window.location.pathname}${window.location.search}${window.location.hash}`);
 	}
 
 	static meta: IModuleMeta = {
@@ -67,5 +71,10 @@ export default class RouterModule extends Module {
 	static forRoot(routes: IRoute[]): typeof RouterModule {
 		RouterService.setRoutes(routes);
 		return RouterModule;
+	}
+
+	static useStrategy(locationStrategyType: typeof LocationStrategy): typeof RouterModule {
+		RouterService.useLocationStrategy(locationStrategyType);
+		return this;
 	}
 }

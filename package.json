@@ -36,7 +36,6 @@
     "serve": "node www/server/index.js"
   },
   "dependencies": {
-    "htmlparser2": "~4.1.0",
     "rxjs": "~6.6.2",
     "rxcomp": "~1.0.0-beta.12",
     "tslib": "~2.0.0"

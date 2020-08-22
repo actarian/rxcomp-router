@@ -16190,7 +16190,6 @@ var CoreModule = function (_Module) {
     var _this;
 
     _this = _Module.call(this) || this;
-    console.log('CoreModule');
     errors$.pipe(operators.takeUntil(_this.unsubscribe$)).subscribe();
     return _this;
   }

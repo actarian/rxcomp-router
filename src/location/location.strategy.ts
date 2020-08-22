@@ -1,102 +1,273 @@
-import { BrowserPlatformLocation, PlatformLocation } from './location';
+import { isPlatformBrowser } from "rxcomp";
+import { IRoutePath } from "../route/route-path";
+import { RouterKeyValue, RouterLink } from "../router.types";
+import { RouteSegment } from "../rxcomp-router";
 
-export abstract class LocationStrategy {
-    abstract path(includeHash?: boolean): string;
-    abstract prepareExternalUrl(internal: string): string;
-    abstract pushState(state: any, title: string, url: string, queryParams: string): void;
-    abstract replaceState(state: any, title: string, url: string, queryParams: string): void;
-    abstract forward(): void;
-    abstract back(): void;
-    abstract onPopState(fn: any): void;
-    // abstract onPopState(fn: LocationChangeListener): void;
-    abstract getBaseHref(): string;
+export interface ILocationStrategy {
+    serializeLink(routerLink: RouterLink): string;
+    serializeUrl(url: string): string;
+    serialize(routePath: IRoutePath): string;
+    resolve(url: string, target: IRoutePath): IRoutePath;
+    resolveParams(path: string, routeSegments: RouteSegment[]): { [key: string]: any };
+    decodeParams(encoded: string | null): any | null;
+    encodeParams(value: any): string | null;
+    decodeSegment(s: string): string;
+    encodeSegment(s: string): string;
+    decodeString(s: string): string;
+    encodeString(s: string): string;
+    getPath(url: string): string;
+    getUrl(url: string, params?: URLSearchParams): string;
+    setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
 }
 
-export class PathLocationStrategy extends LocationStrategy {
-    private location_: PlatformLocation = new BrowserPlatformLocation();
-    private _baseHref: string;
-    constructor(href?: string) {
-        super();
-        if (href == null) {
-            href = this.location_.getBaseHrefFromDOM();
+export class LocationStrategy implements ILocationStrategy {
+    serializeLink(routerLink: RouterLink): string {
+        const url: string = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {
+            return typeof x === 'string' ? x : this.encodeParams(x);
+        }).join('/');
+        return this.serializeUrl(url);
+    }
+    serializeUrl(url: string): string {
+        return url;
+    }
+    serialize(routePath: IRoutePath): string {
+        return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
+    }
+    resolve(url: string, target: IRoutePath = {}): IRoutePath {
+        let prefix: string = '';
+        let path: string = '';
+        let query: string = '';
+        let search: string = '';
+        let hash: string = '';
+        let segments: string[];
+        let params: { [key: string]: any };
+        const regExp: RegExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
+        const matches = url.matchAll(regExp);
+        for (let match of matches) {
+            const g1 = match[1];
+            const g2 = match[2];
+            const g3 = match[3];
+            if (g1) {
+                path = g1;
+            }
+            if (g2) {
+                query = g2;
+            }
+            if (g3) {
+                hash = g3;
+            }
         }
-        if (href == null) {
-            throw new Error(`No base href set. Please provide a value for the APP_BASE_HREF token or add a base element to the document.`);
+        prefix = prefix;
+        path = path;
+        query = query;
+        hash = hash.substring(1, hash.length);
+        search = query.substring(1, query.length);
+        segments = path.split('/').filter(x => x !== '');
+        params = {};
+        target.prefix = prefix;
+        target.path = path;
+        target.query = query;
+        target.hash = hash;
+        target.search = search;
+        target.segments = segments;
+        target.params = params;
+        // console.log('resolvePath_', url, prefix, path, query, search, hash, segments, params);
+        return target;
+    }
+    resolveParams(path: string, routeSegments: RouteSegment[]): { [key: string]: any } {
+        const segments: string[] = path.split('/').filter(x => x !== '');
+        const params: RouterKeyValue = {};
+        routeSegments.forEach((segment: RouteSegment, index: number) => {
+            // console.log('segment.params', segment.params);
+            const keys: string[] = Object.keys(segment.params);
+            if (keys.length) {
+                params[keys[0]] = this.decodeParams(segments[index]);
+            }
+        });
+        return params;
+    }
+    decodeParams(encoded: string | null = null): any | null {
+        let decoded: any | null = encoded;
+        if (encoded) {
+            if (encoded.indexOf(';') === 0) {
+                try {
+                    const json = window.atob(encoded.substring(1, encoded.length));
+                    // const json = encoded;
+                    decoded = JSON.parse(json);
+                } catch (error) {
+                    // console.log('decodeParam_.error', error);
+                    decoded = encoded;
+                }
+            } else if (Number(encoded).toString() === encoded) {
+                decoded = Number(encoded);
+            }
         }
-        this._baseHref = href;
+        return decoded;
     }
-    onPopState(fn: any): void {
-        // onPopState(fn: LocationChangeListener): void {
-        this.location_.onPopState(fn);
-        this.location_.onHashChange(fn);
+    encodeParams(value: any): string | null {
+        let encoded: string | null = null;
+        try {
+            if (typeof value === 'object') {
+                const json = JSON.stringify(value);
+                encoded = ';' + window.btoa(json);
+                // encoded = json;
+            } else if (typeof value === 'number') {
+                encoded = value.toString();
+            }
+        } catch (error) {
+            console.log('encodeParam__.error', error);
+        }
+        return encoded;
     }
-    getBaseHref(): string {
-        return this._baseHref;
+    decodeSegment(s: string): string {
+        return this.decodeString(s.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
     }
-    prepareExternalUrl(internal: string): string {
-        return joinWithSlash(this._baseHref, internal);
+    encodeSegment(s: string): string {
+        return this.encodeString(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
     }
-    path(includeHash: boolean = false): string {
-        const pathname = this.location_.pathname + normalizeQueryParams(this.location_.search);
-        const hash = this.location_.hash;
-        return hash && includeHash ? `${pathname}${hash}` : pathname;
+    decodeString(s: string): string {
+        return decodeURIComponent(s.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
     }
-    pushState(state: any, title: string, url: string, queryParams: string) {
-        const externalUrl = this.prepareExternalUrl(url + normalizeQueryParams(queryParams));
-        this.location_.pushState(state, title, externalUrl);
+    encodeString(s: string): string {
+        return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
     }
-    replaceState(state: any, title: string, url: string, queryParams: string) {
-        const externalUrl = this.prepareExternalUrl(url + normalizeQueryParams(queryParams));
-        this.location_.replaceState(state, title, externalUrl);
+    getPath(url: string): string {
+        return url;
     }
-    forward(): void {
-        this.location_.forward();
+    getUrl(url: string, params?: URLSearchParams): string {
+        return `${url}${params ? '?' + params.toString() : ''}`;
     }
-    back(): void {
-        this.location_.back();
+    setHistory(url: string, params?: URLSearchParams, popped?: boolean): void {
+        if (isPlatformBrowser && window.history && window.history.pushState) {
+            const title = document.title;
+            url = this.getUrl(url, params);
+            // !!!
+            // const state = params ? params.toString() : '';
+            // console.log(state);
+            if (popped) {
+                window.history.replaceState(undefined, title, url);
+            } else {
+                window.history.pushState(undefined, title, url);
+            }
+        }
     }
 }
 
-export class HashLocationStrategy extends LocationStrategy {
-    private _baseHref: string = '';
+export class LocationStrategyPath extends LocationStrategy implements ILocationStrategy {
     constructor() {
         super();
     }
-    // onPopState(fn: LocationChangeListener): void {
-    onPopState(fn: any): void {
-        this.onPopState(fn);
-        this.onHashChange(fn);
+    serialize(routePath: IRoutePath): string {
+        return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
     }
-    getBaseHref(): string {
-        return this._baseHref;
-    }
-    path(includeHash: boolean = false): string {
-        let path = this.hash;
-        if (path == null) path = '#';
-        return path.length > 0 ? path.substring(1) : path;
-    }
-    prepareExternalUrl(internal: string): string {
-        const url = joinWithSlash(this._baseHref, internal);
-        return url.length > 0 ? ('#' + url) : url;
-    }
-    pushState(state: any, title: string, path: string, queryParams: string) {
-        let url: string | null = this.prepareExternalUrl(path + normalizeQueryParams(queryParams));
-        if (url.length == 0) {
-            url = this.pathname;
+    resolve(url: string, target: IRoutePath = {}): IRoutePath {
+        let prefix: string = '';
+        let path: string = '';
+        let query: string = '';
+        let search: string = '';
+        let hash: string = '';
+        let segments: string[];
+        let params: { [key: string]: any };
+        const regExp: RegExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
+        const matches = url.matchAll(regExp);
+        for (let match of matches) {
+            const g1 = match[1];
+            const g2 = match[2];
+            const g3 = match[3];
+            if (g1) {
+                path = g1;
+            }
+            if (g2) {
+                query = g2;
+            }
+            if (g3) {
+                hash = g3;
+            }
         }
-        this.pushState(state, title, url);
+        prefix = prefix;
+        path = path;
+        query = query;
+        hash = hash.substring(1, hash.length);
+        search = query.substring(1, query.length);
+        segments = path.split('/').filter(x => x !== '');
+        params = {};
+        target.prefix = prefix;
+        target.path = path;
+        target.query = query;
+        target.hash = hash;
+        target.search = search;
+        target.segments = segments;
+        target.params = params;
+        // console.log('resolvePath_', url, prefix, path, query, search, hash, segments, params);
+        return target;
     }
-    replaceState(state: any, title: string, path: string, queryParams: string) {
-        let url = this.prepareExternalUrl(path + normalizeQueryParams(queryParams));
-        if (url.length == 0) {
-            url = this.pathname;
+}
+
+export class LocationStrategyHash extends LocationStrategy implements ILocationStrategy {
+    constructor() {
+        super();
+    }
+    serializeLink(routerLink: RouterLink): string {
+        const url: string = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {
+            return typeof x === 'string' ? x : this.encodeParams(x);
+        }).join('/');
+        return this.serializeUrl(url);
+    }
+    serializeUrl(url: string): string {
+        const path: IRoutePath = this.resolve(url, {});
+        return this.serialize(path);
+    }
+    serialize(routePath: IRoutePath): string {
+        return `${routePath.prefix}${routePath.search}${routePath.hash}${routePath.path}`;
+    }
+    resolve(url: string, target: IRoutePath = {}): IRoutePath {
+        let prefix: string = '';
+        let path: string = '';
+        let query: string = '';
+        let search: string = '';
+        let hash: string = '#';
+        let segments: string[];
+        let params: { [key: string]: any };
+        const regExp: RegExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#.*)$/gm;
+        const matches = url.matchAll(regExp);
+        for (let match of matches) {
+            const g1 = match[1];
+            const g2 = match[2];
+            const g3 = match[3];
+            if (g1) {
+                prefix = g1;
+            }
+            if (g2) {
+                query = g2;
+            }
+            if (g3) {
+                path = g3;
+            }
         }
-        this.replaceState(state, title, url);
+        prefix = prefix;
+        path = path.substring(1, path.length);
+        hash = hash;
+        search = query.substring(1, query.length);
+        segments = path.split('/').filter(x => x !== '');
+        params = {};
+        target.prefix = prefix;
+        target.path = path;
+        target.query = query;
+        target.hash = hash;
+        target.search = search;
+        target.segments = segments;
+        target.params = params;
+        // console.log('resolvePath_', url, prefix, path, query, search, hash, segments, params);
+        return target;
     }
-    forward(): void {
-        this.forward();
+    getPath(url: string): string {
+        if (url.indexOf(`/#`) === -1) {
+            return `/#${url}`;
+        } else {
+            return url;
+        }
     }
-    back(): void {
-        this.back();
+    getUrl(url: string, params?: URLSearchParams): string {
+        return `${params ? '?' + params.toString() : ''}${this.getPath(url)}`;
     }
 }

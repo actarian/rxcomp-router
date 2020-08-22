@@ -133,7 +133,338 @@ function _createForOfIteratorHelperLoose(o, allowArrayLike) {
   };
 
   return View;
-}(rxcomp.Component);function mapCanDeactivate$_(activator) {
+}(rxcomp.Component);var LocationStrategy = function () {
+  function LocationStrategy() {}
+
+  var _proto = LocationStrategy.prototype;
+
+  _proto.serializeLink = function serializeLink(routerLink) {
+    var _this = this;
+
+    var url = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(function (x) {
+      return typeof x === 'string' ? x : _this.encodeParams(x);
+    }).join('/');
+    return this.serializeUrl(url);
+  };
+
+  _proto.serializeUrl = function serializeUrl(url) {
+    return url;
+  };
+
+  _proto.serialize = function serialize(routePath) {
+    return "" + routePath.prefix + routePath.path + routePath.search + routePath.hash;
+  };
+
+  _proto.resolve = function resolve(url, target) {
+    if (target === void 0) {
+      target = {};
+    }
+
+    var prefix = '';
+    var path = '';
+    var query = '';
+    var search = '';
+    var hash = '';
+    var segments;
+    var params;
+    var regExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
+    var matches = url.matchAll(regExp);
+
+    for (var _iterator = _createForOfIteratorHelperLoose(matches), _step; !(_step = _iterator()).done;) {
+      var match = _step.value;
+      var g1 = match[1];
+      var g2 = match[2];
+      var g3 = match[3];
+
+      if (g1) {
+        path = g1;
+      }
+
+      if (g2) {
+        query = g2;
+      }
+
+      if (g3) {
+        hash = g3;
+      }
+    }
+
+    prefix = prefix;
+    path = path;
+    query = query;
+    hash = hash.substring(1, hash.length);
+    search = query.substring(1, query.length);
+    segments = path.split('/').filter(function (x) {
+      return x !== '';
+    });
+    params = {};
+    target.prefix = prefix;
+    target.path = path;
+    target.query = query;
+    target.hash = hash;
+    target.search = search;
+    target.segments = segments;
+    target.params = params;
+    return target;
+  };
+
+  _proto.resolveParams = function resolveParams(path, routeSegments) {
+    var _this2 = this;
+
+    var segments = path.split('/').filter(function (x) {
+      return x !== '';
+    });
+    var params = {};
+    routeSegments.forEach(function (segment, index) {
+      var keys = Object.keys(segment.params);
+
+      if (keys.length) {
+        params[keys[0]] = _this2.decodeParams(segments[index]);
+      }
+    });
+    return params;
+  };
+
+  _proto.decodeParams = function decodeParams(encoded) {
+    if (encoded === void 0) {
+      encoded = null;
+    }
+
+    var decoded = encoded;
+
+    if (encoded) {
+      if (encoded.indexOf(';') === 0) {
+        try {
+          var json = window.atob(encoded.substring(1, encoded.length));
+          decoded = JSON.parse(json);
+        } catch (error) {
+          decoded = encoded;
+        }
+      } else if (Number(encoded).toString() === encoded) {
+        decoded = Number(encoded);
+      }
+    }
+
+    return decoded;
+  };
+
+  _proto.encodeParams = function encodeParams(value) {
+    var encoded = null;
+
+    try {
+      if (typeof value === 'object') {
+        var json = JSON.stringify(value);
+        encoded = ';' + window.btoa(json);
+      } else if (typeof value === 'number') {
+        encoded = value.toString();
+      }
+    } catch (error) {
+      console.log('encodeParam__.error', error);
+    }
+
+    return encoded;
+  };
+
+  _proto.decodeSegment = function decodeSegment(s) {
+    return this.decodeString(s.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
+  };
+
+  _proto.encodeSegment = function encodeSegment(s) {
+    return this.encodeString(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
+  };
+
+  _proto.decodeString = function decodeString(s) {
+    return decodeURIComponent(s.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
+  };
+
+  _proto.encodeString = function encodeString(s) {
+    return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+  };
+
+  _proto.getPath = function getPath(url) {
+    return url;
+  };
+
+  _proto.getUrl = function getUrl(url, params) {
+    return "" + url + (params ? '?' + params.toString() : '');
+  };
+
+  _proto.setHistory = function setHistory(url, params, popped) {
+    if (rxcomp.isPlatformBrowser && window.history && window.history.pushState) {
+      var title = document.title;
+      url = this.getUrl(url, params);
+
+      if (popped) {
+        window.history.replaceState(undefined, title, url);
+      } else {
+        window.history.pushState(undefined, title, url);
+      }
+    }
+  };
+
+  return LocationStrategy;
+}();
+var LocationStrategyPath = function (_LocationStrategy) {
+  _inheritsLoose(LocationStrategyPath, _LocationStrategy);
+
+  function LocationStrategyPath() {
+    return _LocationStrategy.call(this) || this;
+  }
+
+  var _proto2 = LocationStrategyPath.prototype;
+
+  _proto2.serialize = function serialize(routePath) {
+    return "" + routePath.prefix + routePath.path + routePath.search + routePath.hash;
+  };
+
+  _proto2.resolve = function resolve(url, target) {
+    if (target === void 0) {
+      target = {};
+    }
+
+    var prefix = '';
+    var path = '';
+    var query = '';
+    var search = '';
+    var hash = '';
+    var segments;
+    var params;
+    var regExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
+    var matches = url.matchAll(regExp);
+
+    for (var _iterator2 = _createForOfIteratorHelperLoose(matches), _step2; !(_step2 = _iterator2()).done;) {
+      var match = _step2.value;
+      var g1 = match[1];
+      var g2 = match[2];
+      var g3 = match[3];
+
+      if (g1) {
+        path = g1;
+      }
+
+      if (g2) {
+        query = g2;
+      }
+
+      if (g3) {
+        hash = g3;
+      }
+    }
+
+    prefix = prefix;
+    path = path;
+    query = query;
+    hash = hash.substring(1, hash.length);
+    search = query.substring(1, query.length);
+    segments = path.split('/').filter(function (x) {
+      return x !== '';
+    });
+    params = {};
+    target.prefix = prefix;
+    target.path = path;
+    target.query = query;
+    target.hash = hash;
+    target.search = search;
+    target.segments = segments;
+    target.params = params;
+    return target;
+  };
+
+  return LocationStrategyPath;
+}(LocationStrategy);
+var LocationStrategyHash = function (_LocationStrategy2) {
+  _inheritsLoose(LocationStrategyHash, _LocationStrategy2);
+
+  function LocationStrategyHash() {
+    return _LocationStrategy2.call(this) || this;
+  }
+
+  var _proto3 = LocationStrategyHash.prototype;
+
+  _proto3.serializeLink = function serializeLink(routerLink) {
+    var _this3 = this;
+
+    var url = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(function (x) {
+      return typeof x === 'string' ? x : _this3.encodeParams(x);
+    }).join('/');
+    return this.serializeUrl(url);
+  };
+
+  _proto3.serializeUrl = function serializeUrl(url) {
+    var path = this.resolve(url, {});
+    return this.serialize(path);
+  };
+
+  _proto3.serialize = function serialize(routePath) {
+    return "" + routePath.prefix + routePath.search + routePath.hash + routePath.path;
+  };
+
+  _proto3.resolve = function resolve(url, target) {
+    if (target === void 0) {
+      target = {};
+    }
+
+    var prefix = '';
+    var path = '';
+    var query = '';
+    var search = '';
+    var hash = '#';
+    var segments;
+    var params;
+    var regExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#.*)$/gm;
+    var matches = url.matchAll(regExp);
+
+    for (var _iterator3 = _createForOfIteratorHelperLoose(matches), _step3; !(_step3 = _iterator3()).done;) {
+      var match = _step3.value;
+      var g1 = match[1];
+      var g2 = match[2];
+      var g3 = match[3];
+
+      if (g1) {
+        prefix = g1;
+      }
+
+      if (g2) {
+        query = g2;
+      }
+
+      if (g3) {
+        path = g3;
+      }
+    }
+
+    prefix = prefix;
+    path = path.substring(1, path.length);
+    hash = hash;
+    search = query.substring(1, query.length);
+    segments = path.split('/').filter(function (x) {
+      return x !== '';
+    });
+    params = {};
+    target.prefix = prefix;
+    target.path = path;
+    target.query = query;
+    target.hash = hash;
+    target.search = search;
+    target.segments = segments;
+    target.params = params;
+    return target;
+  };
+
+  _proto3.getPath = function getPath(url) {
+    if (url.indexOf("/#") === -1) {
+      return "/#" + url;
+    } else {
+      return url;
+    }
+  };
+
+  _proto3.getUrl = function getUrl(url, params) {
+    return "" + (params ? '?' + params.toString() : '') + this.getPath(url);
+  };
+
+  return LocationStrategyHash;
+}(LocationStrategy);function mapCanDeactivate$_(activator) {
   return function canDeactivate$(component, currentRoute) {
     return makeObserver$_(function () {
       return activator.canDeactivate(component, currentRoute);
@@ -198,35 +529,14 @@ function makeObserver$_(callback) {
       }
     };
   });
-}var RouteSegment = function () {
-  function RouteSegment(path, params) {
-    if (params === void 0) {
-      params = {};
-    }
-
-    this.path = path;
-    this.params = params;
+}var RouteSegment = function RouteSegment(path, params) {
+  if (params === void 0) {
+    params = {};
   }
 
-  var _proto = RouteSegment.prototype;
-
-  _proto.toString = function toString() {
-    return "" + encodeSegment_(this.path) + encodeParams_(this.params);
-  };
-
-  return RouteSegment;
-}();
-function encodeParams_(params) {
-  return Object.keys(params).map(function (key) {
-    return ";" + encodeSegment_(key) + "=" + (typeof params[key] === 'string' ? encodeSegment_(params[key]) : encodeParams_(params[key]));
-  }).join('');
-}
-function encodeSegment_(s) {
-  return encodeString_(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
-}
-function encodeString_(s) {
-  return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
-}var Route = function Route(options) {
+  this.path = path;
+  this.params = params;
+};var Route = function Route(options) {
   var _this = this;
 
   this.pathMatch = 'prefix';
@@ -266,7 +576,7 @@ function encodeString_(s) {
     segments.push(new RouteSegment(this.path));
     this.matcher = new RegExp('^.*$');
   } else {
-    var matchers = ['^(^\.\.\/|\.\/|\/\/|\/)?'];
+    var matchers = ["^(../|./|//|/)?"];
     var regExp = /(^\.\.\/|\.\/|\/\/|\/)|([^:|\/]+)\/?|\:([^\/]+)\/?/g;
     var matches = this.path.matchAll(regExp);
 
@@ -298,14 +608,8 @@ function encodeString_(s) {
   }
 
   this.segments = segments;
-};
-function serializeUrl_(routerLink) {
-  var segments = Array.isArray(routerLink) ? routerLink : [routerLink];
-  return segments.map(function (x) {
-    return typeof x === 'string' ? x : encodeParams_(x);
-  }).join('/');
-}var RoutePath = function () {
-  function RoutePath(url, routeSegments, snapshot) {
+};var RoutePath = function () {
+  function RoutePath(url, routeSegments, snapshot, locationStrategy) {
     if (url === void 0) {
       url = '';
     }
@@ -314,6 +618,12 @@ function serializeUrl_(routerLink) {
       routeSegments = [];
     }
 
+    this.prefix = '';
+    this.path = '';
+    this.query = '';
+    this.search = '';
+    this.hash = '';
+    this.locationStrategy = locationStrategy || new LocationStrategy();
     this.url = url;
     this.routeSegments = routeSegments;
     this.route = snapshot;
@@ -326,8 +636,8 @@ function serializeUrl_(routerLink) {
     },
     set: function set(url) {
       if (this.url_ !== url) {
-        this.url_ = url;
-        resolvePath_(url, this);
+        this.locationStrategy.resolve(url, this);
+        this.url_ = this.locationStrategy.serialize(this);
       }
     }
   }, {
@@ -338,7 +648,7 @@ function serializeUrl_(routerLink) {
     set: function set(routeSegments) {
       if (this.routeSegments_ !== routeSegments) {
         this.routeSegments_ = routeSegments;
-        this.params = resolveParams_(this.path, routeSegments);
+        this.params = this.locationStrategy.resolveParams(this.path, routeSegments);
       }
     }
   }, {
@@ -349,99 +659,7 @@ function serializeUrl_(routerLink) {
   }]);
 
   return RoutePath;
-}();
-function resolvePath_(url, target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  var path = '';
-  var query = '';
-  var hash = '';
-  var regExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
-  var matches = url.matchAll(regExp);
-
-  for (var _iterator = _createForOfIteratorHelperLoose(matches), _step; !(_step = _iterator()).done;) {
-    var match = _step.value;
-    var g1 = match[1];
-    var g2 = match[2];
-    var g3 = match[3];
-
-    if (g1) {
-      path = g1;
-    }
-
-    if (g2) {
-      query = g2;
-    }
-
-    if (g3) {
-      hash = g3;
-    }
-  }
-
-  target.path = path;
-  target.query = query;
-  target.hash = hash;
-  target.search = query.substring(1, query.length);
-  target.segments = path.split('/').filter(function (x) {
-    return x !== '';
-  });
-  target.params = {};
-  return target;
-}
-function resolveParams_(path, routeSegments) {
-  var segments = path.split('/').filter(function (x) {
-    return x !== '';
-  });
-  var params = {};
-  routeSegments.forEach(function (segment, index) {
-    var keys = Object.keys(segment.params);
-
-    if (keys.length) {
-      params[keys[0]] = decodeParams_(segments[index]);
-    }
-  });
-  return params;
-}
-function decodeParams_(encoded) {
-  if (encoded === void 0) {
-    encoded = null;
-  }
-
-  var decoded = encoded;
-
-  if (encoded) {
-    if (encoded.indexOf(';') === 0) {
-      try {
-        var json = window.atob(encoded.substring(1, encoded.length));
-        decoded = JSON.parse(json);
-      } catch (error) {
-        decoded = encoded;
-      }
-    } else if (Number(encoded).toString() === encoded) {
-      decoded = Number(encoded);
-    }
-  }
-
-  return decoded;
-}
-function encodeParams_$1(value) {
-  var encoded = null;
-
-  try {
-    if (typeof value === 'object') {
-      var json = JSON.stringify(value);
-      encoded = ';' + window.btoa(json);
-    } else if (typeof value === 'number') {
-      encoded = value.toString();
-    }
-  } catch (error) {
-    console.log('encodeParam__.error', error);
-  }
-
-  return encoded;
-}var RouteSnapshot = function () {
+}();var RouteSnapshot = function () {
   function RouteSnapshot(options) {
     this.pathMatch = 'prefix';
     this.relative = true;
@@ -630,7 +848,7 @@ var NavigationError = function (_RouterEvent15) {
     this.routes = routes.map(function (x) {
       return new Route(x);
     });
-    this.observe$ = makeObserve$_(this.routes, this.route$, this.events$);
+    this.observe$ = makeObserve$_(this.routes, this.route$, this.events$, this.locationStrategy);
     return this;
   };
 
@@ -651,7 +869,7 @@ var NavigationError = function (_RouterEvent15) {
   };
 
   RouterService.findRoute = function findRoute(routerLink) {
-    var initialUrl = serializeUrl_(routerLink);
+    var initialUrl = this.locationStrategy.serializeLink(routerLink);
     return this.findRouteByUrl(initialUrl);
   };
 
@@ -671,16 +889,18 @@ var NavigationError = function (_RouterEvent15) {
   };
 
   RouterService.getPath = function getPath(routerLink) {
+    var _this = this;
+
     if (routerLink === void 0) {
       routerLink = [];
     }
 
     var lastPath = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(function (x) {
-      return typeof x === 'string' ? x : encodeParams_$1(x);
+      return typeof x === 'string' ? x : _this.locationStrategy.encodeParams(x);
     }).join('/');
     var segments = [];
     var routes = [];
-    var route = RouterService.findRouteByUrl(lastPath);
+    var route = this.findRouteByUrl(lastPath);
 
     if (route) {
       var r = route == null ? void 0 : route.parent;
@@ -700,14 +920,28 @@ var NavigationError = function (_RouterEvent15) {
     var initialUrl = routes.map(function (r) {
       return r instanceof RouteSnapshot ? r.extractedUrl : r.path;
     }).join('/');
-    var routePath = new RoutePath(initialUrl, segments, route || undefined);
+    initialUrl = this.locationStrategy.getPath(initialUrl);
+    var routePath = new RoutePath(initialUrl, segments, route || undefined, this.locationStrategy);
     return routePath;
+  };
+
+  RouterService.useLocationStrategy = function useLocationStrategy(locationStrategyType) {
+    this.locationStrategy_ = new locationStrategyType();
   };
 
   _createClass(RouterService, null, [{
     key: "flatRoutes",
     get: function get() {
       return getFlatRoutes_(this.routes);
+    }
+  }, {
+    key: "locationStrategy",
+    get: function get() {
+      if (this.locationStrategy_) {
+        return this.locationStrategy_;
+      } else {
+        return this.locationStrategy_ = new LocationStrategyPath();
+      }
     }
   }]);
 
@@ -716,19 +950,6 @@ var NavigationError = function (_RouterEvent15) {
 RouterService.routes = [];
 RouterService.route$ = new rxjs.ReplaySubject(1);
 RouterService.events$ = new rxjs.ReplaySubject(1);
-
-function setHistory_(url, params, popped) {
-  if (rxcomp.isPlatformBrowser && window.history && window.history.pushState) {
-    var title = document.title;
-    url = "" + url + (params ? '?' + params.toString() : '');
-
-    if (popped) {
-      window.history.replaceState(undefined, title, url);
-    } else {
-      window.history.pushState(undefined, title, url);
-    }
-  }
-}
 
 function getFlatRoutes_(routes) {
   var reduceRoutes = function reduceRoutes(routes) {
@@ -765,9 +986,18 @@ function clearRoutes_(routes, currentSnapshot) {
 }
 
 function resolveRoutes_(routes, childRoutes, initialUrl) {
-  return childRoutes.reduce(function (p, route) {
-    return p || resolveRoute_(routes, route, initialUrl);
-  }, undefined);
+  var resolvedRoute;
+
+  for (var _iterator = _createForOfIteratorHelperLoose(childRoutes), _step; !(_step = _iterator()).done;) {
+    var route = _step.value;
+    resolvedRoute = resolveRoute_(routes, route, initialUrl);
+
+    if (resolvedRoute) {
+      return resolvedRoute;
+    }
+  }
+
+  return resolvedRoute;
 }
 
 function resolveRoute_(routes, route, initialUrl) {
@@ -778,17 +1008,17 @@ function resolveRoute_(routes, route, initialUrl) {
   var remainUrl = initialUrl;
   var match = initialUrl.match(route.matcher);
 
-  if (match === null) {
+  if (!match) {
     return undefined;
   }
 
   if (route.redirectTo) {
-    return resolveRoute_(routes, route, route.redirectTo);
+    return resolveRoutes_(routes, routes, route.redirectTo);
   }
 
   extractedUrl = match[0];
   remainUrl = initialUrl.substring(match[0].length, initialUrl.length);
-  var routePath = new RoutePath(extractedUrl, route.segments);
+  var routePath = new RoutePath(extractedUrl, route.segments, undefined, RouterService.locationStrategy);
   var params = routePath.params;
   var snapshot = new RouteSnapshot(_objectSpread2(_objectSpread2({}, route), {}, {
     initialUrl: initialUrl,
@@ -888,11 +1118,9 @@ function makeCanActivateResponse$_(events$, event) {
   }
 }
 
-function makeObserve$_(routes, route$, events$) {
+function makeObserve$_(routes, route$, events$, locationStrategy) {
   var currentRoute;
-  var stateEvents$ = rxjs.merge(rxjs.fromEvent(window, 'popstate')).pipe(operators.tap(function (event) {
-    console.log('location', document.location.pathname, 'state', event.state);
-  }), operators.map(function (event) {
+  var stateEvents$ = rxjs.merge(rxjs.fromEvent(window, 'popstate')).pipe(operators.map(function (event) {
     return new NavigationStart({
       routerLink: document.location.pathname,
       trigger: 'popstate'
@@ -1000,7 +1228,7 @@ function makeObserve$_(routes, route$, events$) {
       var extractedUrl = segments.join('/').replace(/\/\//g, '/');
       console.log('NavigationEnd', event);
       clearRoutes_(routes, event.route);
-      setHistory_(extractedUrl, undefined, event.trigger === 'popstate');
+      locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
       route$.next(event.route);
     } else if (event instanceof NavigationCancel) {
       console.log('NavigationCancel', event);
@@ -1273,60 +1501,6 @@ RouterLinkActiveDirective.meta = {
     key: "route",
     get: function get() {
       return this.route_;
-    },
-    set: function set(route) {
-      if (this.route_ && route && this.route_.component === route.component) {
-        this.route_.next(route);
-      } else {
-        this.route_ = route;
-
-        if (route) {
-          this.factory = route.component;
-          route.instance = this.instance;
-        } else {
-          this.factory = undefined;
-        }
-      }
-    }
-  }, {
-    key: "factory",
-    get: function get() {
-      return this.factory_;
-    },
-    set: function set(factory) {
-      var _getContext2 = rxcomp.getContext(this),
-          module = _getContext2.module,
-          node = _getContext2.node;
-
-      if (this.factory_ !== factory) {
-        this.factory_ = factory;
-
-        if (this.element) {
-          if (this.instance && this.instance instanceof View) {
-            asObservable_([this.element], this.instance.onExit);
-          }
-
-          this.element.parentNode.removeChild(this.element);
-          module.remove(this.element, this);
-          this.element = undefined;
-          this.instance = undefined;
-        }
-
-        if (factory && factory.meta.template) {
-          var element = document.createElement('div');
-          element.innerHTML = factory.meta.template;
-
-          if (element.children.length === 1) {
-            element = element.firstElementChild;
-          }
-
-          node.appendChild(element);
-          var instance = module.makeInstance(element, factory, factory.meta.selector, this);
-          module.compile(element, instance);
-          this.instance = instance;
-          this.element = element;
-        }
-      }
     }
   }]);
 
@@ -1393,7 +1567,7 @@ var RouterModule = function (_Module) {
         }
       }
     }), operators.takeUntil(_this.unsubscribe$)).subscribe();
-    RouterService.navigate(window.location.pathname + window.location.search + window.location.hash);
+    RouterService.navigate("" + window.location.pathname + window.location.search + window.location.hash);
     return _this;
   }
 
@@ -1402,19 +1576,33 @@ var RouterModule = function (_Module) {
     return RouterModule;
   };
 
+  RouterModule.useStrategy = function useStrategy(locationStrategyType) {
+    RouterService.useLocationStrategy(locationStrategyType);
+    return this;
+  };
+
   return RouterModule;
 }(rxcomp.Module);
 RouterModule.meta = {
   declarations: [].concat(factories, pipes),
   exports: [].concat(factories, pipes)
-};function transition$(callback, delay) {
+};var RouteLocationStrategy;
 
+(function (RouteLocationStrategy) {
+  RouteLocationStrategy["Path"] = "path";
+  RouteLocationStrategy["Hash"] = "hash";
+})(RouteLocationStrategy || (RouteLocationStrategy = {}));function transition$(callback) {
   return rxjs.Observable.create(function (observer) {
     try {
-      callback(function (result) {
-        observer.next(result);
+      if (rxcomp.isPlatformBrowser) {
+        callback(function (result) {
+          observer.next(result);
+          observer.complete();
+        });
+      } else {
+        observer.next(true);
         observer.complete();
-      });
+      }
     } catch (error) {
       observer.error(error);
     }

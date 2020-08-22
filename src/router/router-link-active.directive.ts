@@ -22,14 +22,6 @@ export default class RouterLinkActiveDirective extends Directive {
                 }
             } else if (typeof object === 'string') {
                 keys = object.split(' ').filter(x => x.length);
-                /*
-                const regExp: RegExp = /([^\s]+)/g;
-                const matches = object.matchAll(regExp);
-                for (let match in matches) {
-                    console.log('match', match);
-                    keys.push(match[1]);
-                }
-                */
             }
         }
         node.classList.add.apply(node.classList, keys);

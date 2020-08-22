@@ -1,3 +1,6 @@
+# Ignore
+*.ignore
+
 # Logs
 logs
 *.log

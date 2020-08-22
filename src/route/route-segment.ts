@@ -7,24 +7,23 @@ export class RouteSegment {
         this.path = path;
         this.params = params;
     }
+    /*
     toString(): string {
         return `${encodeSegment_(this.path)}${encodeParams_(this.params)}`;
     }
+    */
 }
-
+/*
 export function encodeParams_(params: RouterKeyValue): string {
     // !!! array?
     return Object.keys(params).map(key => `;${encodeSegment_(key)}=${typeof params[key] === 'string' ? encodeSegment_(params[key] as string) : encodeParams_(params[key] as RouterKeyValue)}`).join('');
 }
-
 export function encodeSegment_(s: string): string {
     return encodeString_(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
 }
-
 export function encodeString_(s: string): string {
     return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
 }
-
 export function decodeParams_(encodedParams: string): RouterKeyValue {
     const params: RouterKeyValue = {} as RouterKeyValue;
     const keyValues = encodedParams.split(';');
@@ -36,7 +35,6 @@ export function decodeParams_(encodedParams: string): RouterKeyValue {
     });
     return params;
 }
-
 export function decodeParams__<T>(encoded: string | null = null): T | null {
     let decoded = null;
     if (encoded) {
@@ -49,7 +47,6 @@ export function decodeParams__<T>(encoded: string | null = null): T | null {
     }
     return decoded;
 }
-
 export function encodeParams__(value: any): string | null {
     let encoded = null;
     try {
@@ -60,7 +57,6 @@ export function encodeParams__(value: any): string | null {
     }
     return encoded;
 }
-
 export function resolveParams__(url: string, routeSegments: RouteSegment[]): RouterKeyValue {
     // console.log('resolveParams__.resolvedRoute.routeSegments', routeSegments);
     const path: string = url.split('?')[0];
@@ -78,3 +74,4 @@ export function resolveParams__(url: string, routeSegments: RouteSegment[]): Rou
     });
     return params;
 }
+*/

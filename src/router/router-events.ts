@@ -19,7 +19,6 @@ export interface IRouterEvent {
     redirectTo?: RouteComponent[];
     error?: any;
 }
-
 export class RouterEvent implements IRouterEvent {
     url!: string;
     routerLink!: RouterLink;
@@ -33,7 +32,6 @@ export class RouterEvent implements IRouterEvent {
         }
     }
 }
-
 // An event triggered when navigation starts.
 export class NavigationStart extends RouterEvent {
     navigationTrigger!: 'imperative' | 'popstate' | 'hashchange';
@@ -44,7 +42,6 @@ export class RoutesRecognized extends RouterEvent {
     route!: RouteSnapshot; // ???
     // state!: RouterStateSnapshot;
 }
-
 // An event triggered at the start of the Guard phase of routing.
 export class GuardsCheckStart extends RouterEvent {
     route!: RouteSnapshot;
@@ -77,7 +74,6 @@ export class ActivationEnd extends RouterEvent {
 export class ChildActivationEnd extends RouterEvent {
     route!: RouteSnapshot;
 }
-
 // An event triggered before the Router lazy loads a route configuration.
 export class RouteConfigLoadStart extends RouterEvent {
     route!: RouteSnapshot;
