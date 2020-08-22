@@ -1912,7 +1912,7 @@ AppModule.meta = {
   }, {
     path: '**',
     component: NotFoundComponent
-  }])],
+  }]).useStrategy(LocationStrategyHash)],
   declarations: [IndexComponent, DataComponent, DetailComponent, ContactsComponent],
   bootstrap: AppComponent
 };rxcomp.Browser.bootstrap(AppModule);}(rxcomp,rxjs,rxjs.operators));

@@ -3,6 +3,7 @@ import { IElement, IFactoryMeta } from 'rxcomp';
 import { combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RouterKeyValue, RouterOutletStructure, transition$, View } from '../../../../src/rxcomp-router';
+
 export default class DetailComponent extends View {
     host!: RouterOutletStructure;
     onInit() {

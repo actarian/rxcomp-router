@@ -1,5 +1,5 @@
 import { CoreModule, IModuleMeta, Module } from 'rxcomp';
-import { RouterModule } from '../../../src/rxcomp-router';
+import { LocationStrategyHash, RouterModule } from '../../../src/rxcomp-router';
 import AppComponent from './app.component';
 import { customActivator } from './custom-activator/custom-activator';
 import ContactsComponent from './pages/contacts.component';
@@ -27,7 +27,7 @@ export default class AppModule extends Module {
 				{ path: 'data/:data', component: DataComponent, data: { title: 'Data' } },
 				{ path: 'contacts', component: ContactsComponent, data: { title: 'Contacts' }, canActivate: [customActivator] },
 				{ path: '**', component: NotFoundComponent },
-			]),
+			]).useStrategy(LocationStrategyHash),
 		],
 		declarations: [
 			IndexComponent,

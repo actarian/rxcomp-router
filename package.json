@@ -2,7 +2,7 @@
   "author": "Luca Zampetti <lzampetti@gmail.com>",
   "name": "rxcomp-router",
   "description": "Reactive RouterModule for RxComp component library",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "browser": "dist/umd/rxcomp-router.js",
   "main": "dist/cjs/rxcomp-router.js",
   "types": "dist/cjs/rxcomp-router.d.ts",
