@@ -1,1 +1,8 @@
+docs
+esdoc
+gulpfile
+src
+test
+www
+
 *.ignore
