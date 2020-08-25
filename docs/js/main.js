@@ -1,5 +1,5 @@
 /**
- * @license rxcomp-router v1.0.0-beta.12
+ * @license rxcomp-router v1.0.0-beta.13
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -1466,7 +1466,9 @@ RouterLinkActiveDirective.meta = {
           }
 
           node.appendChild(element);
-          var instance = module.makeInstance(element, factory, factory.meta.selector, _this4);
+          var instance = module.makeInstance(element, factory, factory.meta.selector, _this4, undefined, {
+            route: snapshot
+          });
           module.compile(element, instance);
           _this4.instance = instance;
           _this4.element = element;
@@ -1732,14 +1734,11 @@ DataComponent.meta = {
   _proto.onInit = function onInit() {
     var _this = this;
 
-    var route = this.host.route;
-
-    if (route) {
-      rxjs.combineLatest(route.data$, route.params$).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (datas) {
-        _this.title = datas[0].title;
-        _this.detailId = datas[1].detailId;
-      });
-    }
+    console.log('DetailComponent.onInit', this.route);
+    rxjs.combineLatest(this.route.data$, this.route.params$).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (datas) {
+      _this.title = datas[0].title;
+      _this.detailId = datas[1].detailId;
+    });
   };
 
   _proto.onEnter = function onEnter(node) {
@@ -1778,9 +1777,6 @@ DataComponent.meta = {
 }(View);
 DetailComponent.meta = {
   selector: '[detail-component]',
-  hosts: {
-    host: RouterOutletStructure
-  },
   template: "\n        <div class=\"page-detail\">\n            <div class=\"title\">Detail {{detailId}}</div>\n            <ul class=\"nav--menu\">\n                <li><a routerLink=\"media\" routerLinkActive=\"active\">Media</a></li>\n                <li><a routerLink=\"files\" routerLinkActive=\"active\">Files</a></li>\n            </ul>\n            <router-outlet></router-outlet>\n        </div>\n        "
 };var IndexComponent = function (_Component) {
   _inheritsLoose(IndexComponent, _Component);

@@ -70,7 +70,7 @@ export default class RouterOutletStructure extends Structure {
                             element = element.firstElementChild as IElement;
                         }
                         node.appendChild(element);
-                        const instance: Factory | undefined = module.makeInstance(element, factory, factory.meta.selector!, this);
+                        const instance: Factory | undefined = module.makeInstance(element, factory, factory.meta.selector!, this, undefined, { route: snapshot });
                         module.compile(element, instance);
                         this.instance = instance;
                         this.element = element;

@@ -2,30 +2,19 @@ import 'gsap';
 import { IElement, IFactoryMeta } from 'rxcomp';
 import { combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { RouterKeyValue, RouterOutletStructure, transition$, View } from '../../../../src/rxcomp-router';
+import { RouterKeyValue, transition$, View } from '../../../../src/rxcomp-router';
 
 export default class DetailComponent extends View {
-    host!: RouterOutletStructure;
     onInit() {
-        const route = this.host.route;
-        if (route) {
-            combineLatest(route.data$, route.params$).pipe(
-                takeUntil(this.unsubscribe$)
-            ).subscribe((datas: RouterKeyValue[]) => {
-                this.title = datas[0].title;
-                this.detailId = datas[1].detailId;
-                // this.pushChanges(); // !!not needed;
-                // console.log('DetailComponent', datas);
-            });
-        }
-        /*
-        (this.host.route as RouteSnapshot).data$.pipe(
-            takeUntil(this.unsubscribe$),
-        ).subscribe((data) => this.title = data.title);
-        (this.host.route as RouteSnapshot).params$.pipe(
-            takeUntil(this.unsubscribe$),
-        ).subscribe((params) => this.detailId = params.detailId);
-        */
+        console.log('DetailComponent.onInit', this.route);
+        combineLatest(this.route.data$, this.route.params$).pipe(
+            takeUntil(this.unsubscribe$)
+        ).subscribe((datas: RouterKeyValue[]) => {
+            this.title = datas[0].title;
+            this.detailId = datas[1].detailId;
+            // this.pushChanges(); // !!not needed;
+            // console.log('DetailComponent', datas);
+        });
     }
     onEnter(node: IElement) {
         return transition$(complete => {
@@ -55,7 +44,6 @@ export default class DetailComponent extends View {
     }
     static meta: IFactoryMeta = {
         selector: '[detail-component]',
-        hosts: { host: RouterOutletStructure },
         template: /* html */`
         <div class="page-detail">
             <div class="title">Detail {{detailId}}</div>
