@@ -253,7 +253,7 @@ function _createForOfIteratorHelperLoose(o, allowArrayLike) {
 
     try {
       if (typeof value === 'object') {
-        var json = JSON.stringify(value);
+        var json = rxcomp.Serializer.encode(value, [rxcomp.encodeJson]) || '';
         encoded = ';' + window.btoa(json);
       } else if (typeof value === 'number') {
         encoded = value.toString();

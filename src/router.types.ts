@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs';
 
 export enum RouteLocationStrategy {
-    Path = 'path',
-    Hash = 'hash',
+	Path = 'path',
+	Hash = 'hash',
 }
 export type RouteComponent = string | number | { [key: string]: any; };
 export type RouterLink = string | RouteComponent[];

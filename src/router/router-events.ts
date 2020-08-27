@@ -3,99 +3,99 @@ import { RouteSnapshot } from '../route/route-snapshot';
 import { RouteComponent, RouterLink } from '../router.types';
 
 export interface IRouterEvent {
-    id?: number;
-    routerLink?: RouterLink;
-    url?: string; // The target URL passed into the `Router#navigateByUrl()` call before navigation. This is the value before the router has parsed or applied redirects to it.
-    initialUrl?: any; // string | UrlTree; // The initial target URL after being parsed with `UrlSerializer.extract()`.
-    urlAfterRedirects?: string;
-    extractedUrl?: any; // UrlTree; // The extracted URL after redirects have been applied.
-    remainUrl?: string;
-    finalUrl?: any; // UrlTree;
-    trigger?: 'imperative' | 'popstate' | 'hashchange';
-    extras?: any; // NavigationExtras;
-    previousNavigation?: IRouterEvent | null;
-    route?: Route | RouteSnapshot;
-    reason?: string;
-    redirectTo?: RouteComponent[];
-    error?: any;
+	id?: number;
+	routerLink?: RouterLink;
+	url?: string; // The target URL passed into the `Router#navigateByUrl()` call before navigation. This is the value before the router has parsed or applied redirects to it.
+	initialUrl?: any; // string | UrlTree; // The initial target URL after being parsed with `UrlSerializer.extract()`.
+	urlAfterRedirects?: string;
+	extractedUrl?: any; // UrlTree; // The extracted URL after redirects have been applied.
+	remainUrl?: string;
+	finalUrl?: any; // UrlTree;
+	trigger?: 'imperative' | 'popstate' | 'hashchange';
+	extras?: any; // NavigationExtras;
+	previousNavigation?: IRouterEvent | null;
+	route?: Route | RouteSnapshot;
+	reason?: string;
+	redirectTo?: RouteComponent[];
+	error?: any;
 }
 export class RouterEvent implements IRouterEvent {
-    url!: string;
-    routerLink!: RouterLink;
-    trigger!: 'imperative' | 'popstate' | 'hashchange';
-    constructor(options?: IRouterEvent) {
-        if (options) {
-            Object.assign(this, options);
-        }
-        if (this.routerLink) {
-            this.url = Array.isArray(this.routerLink) ? this.routerLink.join('') : this.routerLink;
-        }
-    }
+	url!: string;
+	routerLink!: RouterLink;
+	trigger!: 'imperative' | 'popstate' | 'hashchange';
+	constructor(options?: IRouterEvent) {
+		if (options) {
+			Object.assign(this, options);
+		}
+		if (this.routerLink) {
+			this.url = Array.isArray(this.routerLink) ? this.routerLink.join('') : this.routerLink;
+		}
+	}
 }
 // An event triggered when navigation starts.
 export class NavigationStart extends RouterEvent {
-    navigationTrigger!: 'imperative' | 'popstate' | 'hashchange';
-    restoredState?: { [key: string]: any };
+	navigationTrigger!: 'imperative' | 'popstate' | 'hashchange';
+	restoredState?: { [key: string]: any };
 }
 // An event triggered when the Router parses the URL and the routes are recognized.
 export class RoutesRecognized extends RouterEvent {
-    route!: RouteSnapshot; // ???
-    // state!: RouterStateSnapshot;
+	route!: RouteSnapshot; // ???
+	// state!: RouterStateSnapshot;
 }
 // An event triggered at the start of the Guard phase of routing.
 export class GuardsCheckStart extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the start of the child-activation part of the Resolve phase of routing.
 export class ChildActivationStart extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the start of the activation part of the Resolve phase of routing.
 export class ActivationStart extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the end of the Guard phase of routing.
 export class GuardsCheckEnd extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the the start of the Resolve phase of routing.
 export class ResolveStart extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the end of the Resolve phase of routing.
 export class ResolveEnd extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the end of the activation part of the Resolve phase of routing.
 export class ActivationEnd extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered at the end of the child-activation part of the Resolve phase of routing.
 export class ChildActivationEnd extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered before the Router lazy loads a route configuration.
 export class RouteConfigLoadStart extends RouterEvent {
-    route!: RouteSnapshot;
-    urlAfterRedirects!: string;
+	route!: RouteSnapshot;
+	urlAfterRedirects!: string;
 }
 // An event triggered after a route has been lazy loaded.
 export class RouteConfigLoadEnd extends RouterEvent {
-    route!: RouteSnapshot;
+	route!: RouteSnapshot;
 }
 // An event triggered when navigation ends successfully.
 export class NavigationEnd extends RouterEvent {
-    urlAfterRedirects!: string;
-    route!: RouteSnapshot;
+	urlAfterRedirects!: string;
+	route!: RouteSnapshot;
 }
 // An event triggered when navigation is canceled. This is due to a Route Guard returning false during navigation.
 export class NavigationCancel extends RouterEvent {
-    reason!: string;
-    redirectTo?: RouteComponent[];
+	reason!: string;
+	redirectTo?: RouteComponent[];
 }
 // An event triggered when navigation fails due to an unexpected error.
 export class NavigationError extends RouterEvent {
-    error!: any;
+	error!: any;
 }
 
 /*

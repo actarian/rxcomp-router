@@ -1,14 +1,14 @@
 
 export interface ITodoItem {
-    id: number;
-    title: string;
-    completed: boolean;
+	id: number;
+	title: string;
+	completed: boolean;
 }
 
 export interface IGetTodos {
-    getTodos: ITodoItem[]
+	getTodos: ITodoItem[]
 }
 
 export interface IResponseData {
-    data: IGetTodos;
+	data: IGetTodos;
 }

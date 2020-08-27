@@ -36,14 +36,14 @@ class Todo {
 }
 
 const inputs = [
-`input TodoInput {
+	`input TodoInput {
 	title: String
 	completed: Boolean
 }`,
 ];
 
 const types = [
-`type Todo {
+	`type Todo {
 	id: ID!
 	title: String
 	completed: Boolean
@@ -51,13 +51,13 @@ const types = [
 ];
 
 const mutations = [
-`createTodo(input: TodoInput): Todo`,
-`updateTodo(id: ID!, input: TodoInput): Todo`,
+	`createTodo(input: TodoInput): Todo`,
+	`updateTodo(id: ID!, input: TodoInput): Todo`,
 ];
 
 const queries = [
-`getTodos: [Todo]`,
-`getTodo(id: ID!): Todo`,
+	`getTodos: [Todo]`,
+	`getTodo(id: ID!): Todo`,
 ];
 
 const methods = {
