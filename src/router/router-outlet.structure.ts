@@ -74,7 +74,7 @@ export default class RouterOutletStructure extends Structure {
 						module.compile(element, instance);
 						this.instance = instance;
 						this.element = element;
-						snapshot.instance = instance;
+						snapshot.element = element;
 						return this.onEnter$_(element, instance);
 					} else {
 						return of(false);
@@ -137,49 +137,3 @@ function asObservable_<T>(args: any[], callback: (...args: any[]) => Observable<
 		}
 	});
 }
-
-/*
-set route(route: RouteSnapshot | undefined) {
-    if (this.route_ && route && this.route_.component === route.component) {
-        this.route_.next(route);
-    } else {
-        this.route_ = route;
-        if (route) {
-            this.factory = route.component;
-            route.instance = this.instance;
-        } else {
-            this.factory = undefined;
-        }
-    }
-}
-get factory(): typeof Component | undefined {
-    return this.factory_;
-}
-set factory(factory: typeof Component | undefined) {
-    const { module, node } = getContext(this);
-    if (this.factory_ !== factory) {
-        this.factory_ = factory;
-        if (this.element) {
-            if (this.instance && this.instance instanceof View) {
-                asObservable_([this.element], this.instance.onExit);
-            }
-            this.element.parentNode!.removeChild(this.element);
-            module.remove(this.element, this);
-            this.element = undefined;
-            this.instance = undefined;
-        }
-        if (factory && factory.meta.template) {
-            let element: IElement = document.createElement('div');
-            element.innerHTML = factory.meta.template;
-            if (element.children.length === 1) {
-                element = element.firstElementChild as IElement;
-            }
-            node.appendChild(element);
-            const instance: Factory | undefined = module.makeInstance(element, factory, factory.meta.selector!, this);
-            module.compile(element, instance);
-            this.instance = instance;
-            this.element = element;
-        }
-    }
-}
-*/

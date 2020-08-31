@@ -6,7 +6,7 @@ import { RouterKeyValue, transition$, View } from '../../../../src/rxcomp-router
 
 export default class DetailComponent extends View {
 	onInit() {
-		console.log('DetailComponent.onInit', this.route);
+		// console.log('DetailComponent.onInit', this.route);
 		combineLatest(this.route.data$, this.route.params$).pipe(
 			takeUntil(this.unsubscribe$)
 		).subscribe((datas: RouterKeyValue[]) => {

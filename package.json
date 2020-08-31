@@ -2,7 +2,7 @@
   "author": "Luca Zampetti <lzampetti@gmail.com>",
   "name": "rxcomp-router",
   "description": "Reactive RouterModule for RxComp component library",
-  "version": "1.0.0-beta.13",
+  "version": "1.0.0-beta.14",
   "browser": "dist/umd/rxcomp-router.js",
   "main": "dist/cjs/rxcomp-router.js",
   "types": "dist/cjs/rxcomp-router.d.ts",
@@ -33,11 +33,11 @@
     "build": "gulp build --target dist",
     "docs": "typedoc --options typedoc.json",
     "docs2": "typedoc --out docs/documentation src/rxcomp-router.ts --mode modules --theme default --includeDeclarations --excludeExternals --excludePrivate --excludeNotExported",
-    "serve": "node www/server/index.js"
+    "serve": "node web/server/index.js"
   },
   "dependencies": {
     "rxjs": "6.6.2",
-    "rxcomp": "1.0.0-beta.13",
+    "rxcomp": "1.0.0-beta.14",
     "tslib": "2.0.0"
   },
   "devDependencies": {

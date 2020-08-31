@@ -1,4 +1,4 @@
-import { encodeJson, isPlatformBrowser, Serializer } from 'rxcomp';
+import { decodeBase64, decodeJson, encodeBase64, encodeJson, isPlatformBrowser, Serializer } from 'rxcomp';
 import { IRoutePath } from '../route/route-path';
 import { RouterKeyValue, RouterLink } from '../router.types';
 import { RouteSegment } from '../rxcomp-router';
@@ -9,12 +9,12 @@ export interface ILocationStrategy {
 	serialize(routePath: IRoutePath): string;
 	resolve(url: string, target: IRoutePath): IRoutePath;
 	resolveParams(path: string, routeSegments: RouteSegment[]): { [key: string]: any };
-	decodeParams(encoded: string | null): any | null;
-	encodeParams(value: any): string | null;
-	decodeSegment(s: string): string;
+	encodeParams(value: any): string;
+	decodeParams(encoded: string): any;
 	encodeSegment(s: string): string;
-	decodeString(s: string): string;
+	decodeSegment(s: string): string;
 	encodeString(s: string): string;
+	decodeString(s: string): string;
 	getPath(url: string): string;
 	getUrl(url: string, params?: URLSearchParams): string;
 	setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
@@ -86,51 +86,39 @@ export class LocationStrategy implements ILocationStrategy {
 		});
 		return params;
 	}
-	decodeParams(encoded: string | null = null): any | null {
-		let decoded: any | null = encoded;
-		if (encoded) {
-			if (encoded.indexOf(';') === 0) {
-				try {
-					const json = window.atob(encoded.substring(1, encoded.length));
-					// const json = encoded;
-					decoded = JSON.parse(json);
-				} catch (error) {
-					// console.log('decodeParam_.error', error);
-					decoded = encoded;
-				}
-			} else if (Number(encoded).toString() === encoded) {
-				decoded = Number(encoded);
-			}
-		}
-		return decoded;
-	}
-	encodeParams(value: any): string | null {
-		let encoded: string | null = null;
-		try {
-			if (typeof value === 'object') {
-				// const json = JSON.stringify(value);
-				const json = Serializer.encode<string>(value, [encodeJson]) || '';
-				encoded = ';' + window.btoa(json);
-				// encoded = json;
-			} else if (typeof value === 'number') {
-				encoded = value.toString();
-			}
-		} catch (error) {
-			console.log('encodeParam__.error', error);
+	encodeParams(value: any): string {
+		let encoded!: string;
+		if (typeof value === 'object') {
+			encoded = Serializer.encode<string>(value, [encodeJson, encodeBase64, encodeParam]);
+		} else if (typeof value === 'number') {
+			encoded = value.toString();
 		}
 		return encoded;
 	}
-	decodeSegment(s: string): string {
-		return this.decodeString(s.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
+	decodeParams(value: string): any {
+		let decoded: any = value;
+		if (value.indexOf(';') === 0) {
+			try {
+				decoded = Serializer.decode<string>(value, [decodeParam, decodeBase64, decodeJson])
+			} catch (error) {
+				decoded = value;
+			}
+		} else if (Number(value).toString() === value) {
+			decoded = Number(value);
+		}
+		return decoded;
 	}
-	encodeSegment(s: string): string {
-		return this.encodeString(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
+	encodeSegment(value: string): string {
+		return this.encodeString(value).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
 	}
-	decodeString(s: string): string {
-		return decodeURIComponent(s.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
+	decodeSegment(value: string): string {
+		return this.decodeString(value.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
 	}
-	encodeString(s: string): string {
-		return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+	encodeString(value: string): string {
+		return encodeURIComponent(value).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+	}
+	decodeString(value: string): string {
+		return decodeURIComponent(value.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
 	}
 	getPath(url: string): string {
 		return url;
@@ -139,25 +127,30 @@ export class LocationStrategy implements ILocationStrategy {
 		return `${url}${params ? '?' + params.toString() : ''}`;
 	}
 	setHistory(url: string, params?: URLSearchParams, popped?: boolean): void {
-		if (isPlatformBrowser && window.history && window.history.pushState) {
+		if (isPlatformBrowser && typeof history !== 'undefined' && history.pushState) {
 			const title = document.title;
 			url = this.getUrl(url, params);
 			// !!!
 			// const state = params ? params.toString() : '';
 			// console.log(state);
 			if (popped) {
-				window.history.replaceState(undefined, title, url);
+				history.replaceState(undefined, title, url);
 			} else {
-				window.history.pushState(undefined, title, url);
+				history.pushState(undefined, title, url);
 			}
 		}
 	}
 }
 
+export function encodeParam(value: string): string {
+	return `;${value}`;
+}
+
+export function decodeParam(value: string): string {
+	return value.substring(1, value.length);
+}
+
 export class LocationStrategyPath extends LocationStrategy implements ILocationStrategy {
-	constructor() {
-		super();
-	}
 	serialize(routePath: IRoutePath): string {
 		return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
 	}
@@ -205,9 +198,6 @@ export class LocationStrategyPath extends LocationStrategy implements ILocationS
 }
 
 export class LocationStrategyHash extends LocationStrategy implements ILocationStrategy {
-	constructor() {
-		super();
-	}
 	serializeLink(routerLink: RouterLink): string {
 		const url: string = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {
 			return typeof x === 'string' ? x : this.encodeParams(x);

@@ -1,4 +1,5 @@
-import { combineLatest, fromEvent, merge, Observable, of, ReplaySubject } from 'rxjs';
+import { Component, getContextByNode, isPlatformServer, WINDOW } from 'rxcomp';
+import { combineLatest, EMPTY, fromEvent, merge, Observable, of, ReplaySubject } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { ILocationStrategy, LocationStrategy, LocationStrategyPath } from '../location/location.strategy';
 import { INavigationExtras, IRoute, IRoutes, Route, Routes } from '../route/route';
@@ -38,12 +39,23 @@ export default class RouterService {
 	}
 	static findRouteByUrl(initialUrl: string): Route | null {
 		const routes: Routes = getFlatRoutes_(this.routes);
-		let resolvedRoute: Route | null = routes.find(route => initialUrl.match(route.matcher)) || null;
+		let resolvedRoute: Route | null = null;
+		let lastMatcbesLength = Number.NEGATIVE_INFINITY;
+		for (let route of routes) {
+			const matches: RegExpMatchArray | null = initialUrl.match(route.matcher);
+			if (matches && (!resolvedRoute || matches[0].length > lastMatcbesLength)) {
+				lastMatcbesLength = matches[0].length;
+				resolvedRoute = route;
+			}
+		}
 		let urlAfterRedirects: string = initialUrl;
 		if (resolvedRoute && resolvedRoute.redirectTo) {
+			// const routePath: RoutePath = RouterService.getPath(resolvedRoute.redirectTo);
+			// urlAfterRedirects = routePath.url;
 			urlAfterRedirects = resolvedRoute.redirectTo;
 			resolvedRoute = this.findRouteByUrl(urlAfterRedirects);
 		}
+		console.log('RouterService.findRouteByUrl', resolvedRoute);
 		return resolvedRoute;
 	}
 	static getPath(routerLink: RouterLink = []): RoutePath {
@@ -81,22 +93,6 @@ export default class RouterService {
 		this.locationStrategy_ = new locationStrategyType();
 	}
 }
-/*
-function setHistory_(locationStrategy: ILocationStrategy, url: string, params?: URLSearchParams, popped?: boolean): void {
-    if (isPlatformBrowser && window.history && window.history.pushState) {
-        const title = document.title;
-        url = locationStrategy.getUrl(url, params);
-        // !!!
-        // const state = params ? params.toString() : '';
-        // console.log(state);
-        if (popped) {
-            window.history.replaceState(undefined, title, url);
-        } else {
-            window.history.pushState(undefined, title, url);
-        }
-    }
-}
-*/
 function getFlatRoutes_(routes: Routes): Routes {
 	const reduceRoutes: (routes: Route[]) => Route[] = (routes: Route[]): Route[] => {
 		return routes.reduce<Routes>((p: Route[], c: Route) => {
@@ -127,10 +123,10 @@ function clearRoutes_(routes: Routes, currentSnapshot: RouteSnapshot): void {
 }
 function resolveRoutes_(routes: Routes, childRoutes: Routes, initialUrl: string): RouteSnapshot | undefined {
 	let resolvedRoute: RouteSnapshot | undefined;
-	for (let route of childRoutes) {
-		resolvedRoute = resolveRoute_(routes, route, initialUrl);
-		if (resolvedRoute) {
-			return resolvedRoute;
+	for (let childRoute of childRoutes) {
+		const route: RouteSnapshot | undefined = resolveRoute_(routes, childRoute, initialUrl);
+		if (route && (!resolvedRoute || route.remainUrl!.length < resolvedRoute.remainUrl!.length)) {
+			resolvedRoute = route;
 		}
 	}
 	return resolvedRoute;
@@ -144,11 +140,13 @@ function resolveRoute_(routes: Routes, route: Route, initialUrl: string): RouteS
 	const match: RegExpMatchArray | null = initialUrl.match(route.matcher);
 	// console.log(route.matcher, match?.length, initialUrl, '=>', route.path);
 	if (!match) {
+		// console.log(initialUrl, '=>', route.path, initialUrl.match(route.matcher));
 		return undefined;
 	}
 	if (route.redirectTo) {
 		// console.log('match', initialUrl, '=>', route.redirectTo, match);
-		return resolveRoutes_(routes, routes, route.redirectTo);
+		const routePath: RoutePath = RouterService.getPath(route.redirectTo);
+		return resolveRoutes_(routes, routes, routePath.url);
 	}/* else {
         // console.log('match', initialUrl, match);
     }*/
@@ -180,7 +178,8 @@ function makeActivatorResponse$_(event: RouterEvent, activators: Observable<bool
 			} else {
 				const cancelEvent: IRouterEvent = { ...event, reason: 'An activation guard has dismissed navigation to the route.' };
 				if (canActivate !== false) {
-					cancelEvent.redirectTo = canActivate;
+					const routePath: RoutePath = RouterService.getPath(canActivate);
+					cancelEvent.redirectTo = [routePath.url];
 				}
 				return new NavigationCancel(cancelEvent);
 			}
@@ -189,9 +188,10 @@ function makeActivatorResponse$_(event: RouterEvent, activators: Observable<bool
 }
 function makeCanDeactivateResponse$_(events$: ReplaySubject<RouterEvent>, event: GuardsCheckStart, currentRoute?: RouteSnapshot): Observable<RouterEvent> {
 	// console.log('makeCanDeactivateResponse$_', event);
-	if (event.route.canDeactivate && event.route.canDeactivate.length && currentRoute?.instance) {
+	if (event.route.canDeactivate && event.route.canDeactivate.length) {
 		const route: RouteSnapshot = event.route;
-		return makeActivatorResponse$_(event, route.canDeactivate.map(x => x(currentRoute.instance!, currentRoute)));
+		const instance: Component = getContextByNode(event.route.element!)!.instance;
+		return makeActivatorResponse$_(event, route.canDeactivate.map(x => x(instance, currentRoute!)));
 	} else {
 		return of(event);
 	}
@@ -235,7 +235,8 @@ function makeCanActivateResponse$_(events$: ReplaySubject<RouterEvent>, event: C
 }
 function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, events$: ReplaySubject<RouterEvent>, locationStrategy: ILocationStrategy): Observable<RouterEvent> {
 	let currentRoute: RouteSnapshot | undefined;
-	const stateEvents$ = merge(fromEvent<PopStateEvent>(window, 'popstate')).pipe(
+	// console.log('RouterService.WINDOW', WINDOW!!);
+	const stateEvents$ = isPlatformServer ? EMPTY : merge(fromEvent<PopStateEvent>(WINDOW, 'popstate')).pipe(
         /*
         tap((event: PopStateEvent) => {
             // console.log('location', document.location.pathname, 'state', event.state);
@@ -302,7 +303,7 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 					events$.next(new NavigationError({ ...event, error: new Error('unknown route') }));
 				}
 			} else if (event instanceof RoutesRecognized) {
-				// console.log('RoutesRecognized', event);
+				// console.log('RoutesRecognized', event.route.component, event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
 				events$.next(new GuardsCheckStart({ ...event }));
 			} else if (event instanceof GuardsCheckStart) {
 				// console.log('GuardsCheckStart', event);
@@ -352,18 +353,19 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 					}
 				}
 				const extractedUrl: string = segments.join('/').replace(/\/\//g, '/');
-				console.log('NavigationEnd', event);
+				console.log('NavigationEnd', event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
 				clearRoutes_(routes, event.route);
 				locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
 				// setHistory_(locationStrategy, extractedUrl, undefined, event.trigger === 'popstate');
 				route$.next(event.route);
 			} else if (event instanceof NavigationCancel) {
-				console.log('NavigationCancel', event);
+				console.log('NavigationCancel', event.reason, event.redirectTo);
 				if (event.redirectTo) {
+					// const routePath: RoutePath = RouterService.getPath(event.redirectTo);
 					events$.next(new NavigationStart({ routerLink: event.redirectTo, trigger: 'imperative' }));
 				}
 			} else if (event instanceof NavigationError) {
-				console.log('NavigationError', event);
+				console.log('NavigationError', event.error);
 			}
 		}),
 		catchError((error: Error) => of(new NavigationError({ ...event, error }))),

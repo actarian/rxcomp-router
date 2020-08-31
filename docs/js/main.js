@@ -1,5 +1,5 @@
 /**
- * @license rxcomp-router v1.0.0-beta.13
+ * @license rxcomp-router v1.0.0-beta.14
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -225,60 +225,48 @@ function _createForOfIteratorHelperLoose(o, allowArrayLike) {
     return params;
   };
 
-  _proto.decodeParams = function decodeParams(encoded) {
-    if (encoded === void 0) {
-      encoded = null;
-    }
-
-    var decoded = encoded;
-
-    if (encoded) {
-      if (encoded.indexOf(';') === 0) {
-        try {
-          var json = window.atob(encoded.substring(1, encoded.length));
-          decoded = JSON.parse(json);
-        } catch (error) {
-          decoded = encoded;
-        }
-      } else if (Number(encoded).toString() === encoded) {
-        decoded = Number(encoded);
-      }
-    }
-
-    return decoded;
-  };
-
   _proto.encodeParams = function encodeParams(value) {
-    var encoded = null;
+    var encoded;
 
-    try {
-      if (typeof value === 'object') {
-        var json = rxcomp.Serializer.encode(value, [rxcomp.encodeJson]) || '';
-        encoded = ';' + window.btoa(json);
-      } else if (typeof value === 'number') {
-        encoded = value.toString();
-      }
-    } catch (error) {
-      console.log('encodeParam__.error', error);
+    if (typeof value === 'object') {
+      encoded = rxcomp.Serializer.encode(value, [rxcomp.encodeJson, rxcomp.encodeBase64, encodeParam]);
+    } else if (typeof value === 'number') {
+      encoded = value.toString();
     }
 
     return encoded;
   };
 
-  _proto.decodeSegment = function decodeSegment(s) {
-    return this.decodeString(s.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
+  _proto.decodeParams = function decodeParams(value) {
+    var decoded = value;
+
+    if (value.indexOf(';') === 0) {
+      try {
+        decoded = rxcomp.Serializer.decode(value, [decodeParam, rxcomp.decodeBase64, rxcomp.decodeJson]);
+      } catch (error) {
+        decoded = value;
+      }
+    } else if (Number(value).toString() === value) {
+      decoded = Number(value);
+    }
+
+    return decoded;
   };
 
-  _proto.encodeSegment = function encodeSegment(s) {
-    return this.encodeString(s).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
+  _proto.encodeSegment = function encodeSegment(value) {
+    return this.encodeString(value).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/%26/gi, '&');
   };
 
-  _proto.decodeString = function decodeString(s) {
-    return decodeURIComponent(s.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
+  _proto.decodeSegment = function decodeSegment(value) {
+    return this.decodeString(value.replace(/%28/g, '(').replace(/%29/g, ')').replace(/\&/gi, '%26'));
   };
 
-  _proto.encodeString = function encodeString(s) {
-    return encodeURIComponent(s).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+  _proto.encodeString = function encodeString(value) {
+    return encodeURIComponent(value).replace(/%40/g, '@').replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',');
+  };
+
+  _proto.decodeString = function decodeString(value) {
+    return decodeURIComponent(value.replace(/\@/g, '%40').replace(/\:/gi, '%3A').replace(/\$/g, '%24').replace(/\,/gi, '%2C'));
   };
 
   _proto.getPath = function getPath(url) {
@@ -290,25 +278,31 @@ function _createForOfIteratorHelperLoose(o, allowArrayLike) {
   };
 
   _proto.setHistory = function setHistory(url, params, popped) {
-    if (rxcomp.isPlatformBrowser && window.history && window.history.pushState) {
+    if (rxcomp.isPlatformBrowser && typeof history !== 'undefined' && history.pushState) {
       var title = document.title;
       url = this.getUrl(url, params);
 
       if (popped) {
-        window.history.replaceState(undefined, title, url);
+        history.replaceState(undefined, title, url);
       } else {
-        window.history.pushState(undefined, title, url);
+        history.pushState(undefined, title, url);
       }
     }
   };
 
   return LocationStrategy;
 }();
+function encodeParam(value) {
+  return ";" + value;
+}
+function decodeParam(value) {
+  return value.substring(1, value.length);
+}
 var LocationStrategyPath = function (_LocationStrategy) {
   _inheritsLoose(LocationStrategyPath, _LocationStrategy);
 
   function LocationStrategyPath() {
-    return _LocationStrategy.call(this) || this;
+    return _LocationStrategy.apply(this, arguments) || this;
   }
 
   var _proto2 = LocationStrategyPath.prototype;
@@ -376,7 +370,7 @@ var LocationStrategyHash = function (_LocationStrategy2) {
   _inheritsLoose(LocationStrategyHash, _LocationStrategy2);
 
   function LocationStrategyHash() {
-    return _LocationStrategy2.call(this) || this;
+    return _LocationStrategy2.apply(this, arguments) || this;
   }
 
   var _proto3 = LocationStrategyHash.prototype;
@@ -875,9 +869,19 @@ var NavigationError = function (_RouterEvent15) {
 
   RouterService.findRouteByUrl = function findRouteByUrl(initialUrl) {
     var routes = getFlatRoutes_(this.routes);
-    var resolvedRoute = routes.find(function (route) {
-      return initialUrl.match(route.matcher);
-    }) || null;
+    var resolvedRoute = null;
+    var lastMatcbesLength = Number.NEGATIVE_INFINITY;
+
+    for (var _iterator = _createForOfIteratorHelperLoose(routes), _step; !(_step = _iterator()).done;) {
+      var route = _step.value;
+      var matches = initialUrl.match(route.matcher);
+
+      if (matches && (!resolvedRoute || matches[0].length > lastMatcbesLength)) {
+        lastMatcbesLength = matches[0].length;
+        resolvedRoute = route;
+      }
+    }
+
     var urlAfterRedirects = initialUrl;
 
     if (resolvedRoute && resolvedRoute.redirectTo) {
@@ -988,12 +992,12 @@ function clearRoutes_(routes, currentSnapshot) {
 function resolveRoutes_(routes, childRoutes, initialUrl) {
   var resolvedRoute;
 
-  for (var _iterator = _createForOfIteratorHelperLoose(childRoutes), _step; !(_step = _iterator()).done;) {
-    var route = _step.value;
-    resolvedRoute = resolveRoute_(routes, route, initialUrl);
+  for (var _iterator2 = _createForOfIteratorHelperLoose(childRoutes), _step2; !(_step2 = _iterator2()).done;) {
+    var childRoute = _step2.value;
+    var route = resolveRoute_(routes, childRoute, initialUrl);
 
-    if (resolvedRoute) {
-      return resolvedRoute;
+    if (route && (!resolvedRoute || route.remainUrl.length < resolvedRoute.remainUrl.length)) {
+      resolvedRoute = route;
     }
   }
 
@@ -1013,7 +1017,9 @@ function resolveRoute_(routes, route, initialUrl) {
   }
 
   if (route.redirectTo) {
-    return resolveRoutes_(routes, routes, route.redirectTo);
+    var _routePath = RouterService.getPath(route.redirectTo);
+
+    return resolveRoutes_(routes, routes, _routePath.url);
   }
 
   extractedUrl = match[0];
@@ -1055,7 +1061,8 @@ function makeActivatorResponse$_(event, activators) {
       });
 
       if (canActivate !== false) {
-        cancelEvent.redirectTo = canActivate;
+        var routePath = RouterService.getPath(canActivate);
+        cancelEvent.redirectTo = [routePath.url];
       }
 
       return new NavigationCancel(cancelEvent);
@@ -1064,10 +1071,11 @@ function makeActivatorResponse$_(event, activators) {
 }
 
 function makeCanDeactivateResponse$_(events$, event, currentRoute) {
-  if (event.route.canDeactivate && event.route.canDeactivate.length && (currentRoute == null ? void 0 : currentRoute.instance)) {
+  if (event.route.canDeactivate && event.route.canDeactivate.length) {
     var route = event.route;
+    var instance = rxcomp.getContextByNode(event.route.element).instance;
     return makeActivatorResponse$_(event, route.canDeactivate.map(function (x) {
-      return x(currentRoute.instance, currentRoute);
+      return x(instance, currentRoute);
     }));
   } else {
     return rxjs.of(event);
@@ -1120,7 +1128,7 @@ function makeCanActivateResponse$_(events$, event) {
 
 function makeObserve$_(routes, route$, events$, locationStrategy) {
   var currentRoute;
-  var stateEvents$ = rxjs.merge(rxjs.fromEvent(window, 'popstate')).pipe(operators.map(function (event) {
+  var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.merge(rxjs.fromEvent(rxcomp.WINDOW, 'popstate')).pipe(operators.map(function (event) {
     return new NavigationStart({
       routerLink: document.location.pathname,
       trigger: 'popstate'
@@ -1226,12 +1234,12 @@ function makeObserve$_(routes, route$, events$, locationStrategy) {
       }
 
       var extractedUrl = segments.join('/').replace(/\/\//g, '/');
-      console.log('NavigationEnd', event);
+      console.log('NavigationEnd', event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
       clearRoutes_(routes, event.route);
       locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
       route$.next(event.route);
     } else if (event instanceof NavigationCancel) {
-      console.log('NavigationCancel', event);
+      console.log('NavigationCancel', event.reason, event.redirectTo);
 
       if (event.redirectTo) {
         events$.next(new NavigationStart({
@@ -1240,7 +1248,7 @@ function makeObserve$_(routes, route$, events$, locationStrategy) {
         }));
       }
     } else if (event instanceof NavigationError) {
-      console.log('NavigationError', event);
+      console.log('NavigationError', event.error);
     }
   }), operators.catchError(function (error) {
     return rxjs.of(new NavigationError(_objectSpread2(_objectSpread2({}, event), {}, {
@@ -1472,7 +1480,7 @@ RouterLinkActiveDirective.meta = {
           module.compile(element, instance);
           _this4.instance = instance;
           _this4.element = element;
-          snapshot.instance = instance;
+          snapshot.element = element;
           return _this4.onEnter$_(element, instance);
         } else {
           return rxjs.of(false);
@@ -1569,13 +1577,13 @@ var RouterModule = function (_Module) {
         }
       }
     }), operators.takeUntil(_this.unsubscribe$)).subscribe();
-    RouterService.navigate("" + window.location.pathname + window.location.search + window.location.hash);
+    RouterService.navigate("" + (location.pathname === '' ? '/' : location.pathname) + location.search + location.hash);
     return _this;
   }
 
   RouterModule.forRoot = function forRoot(routes) {
     RouterService.setRoutes(routes);
-    return RouterModule;
+    return this;
   };
 
   RouterModule.useStrategy = function useStrategy(locationStrategyType) {
@@ -1734,7 +1742,6 @@ DataComponent.meta = {
   _proto.onInit = function onInit() {
     var _this = this;
 
-    console.log('DetailComponent.onInit', this.route);
     rxjs.combineLatest(this.route.data$, this.route.params$).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (datas) {
       _this.title = datas[0].title;
       _this.detailId = datas[1].detailId;
@@ -1873,7 +1880,7 @@ AppModule.meta = {
       title: 'Dashboard'
     }
   }, {
-    path: 'detail/:detailId',
+    path: 'dashboard/:detailId',
     component: DetailComponent,
     data: {
       title: 'Detail'

@@ -9,8 +9,8 @@ export const Vars = {
 };
 
 /*
-export const STATIC = window.location.port === '40333' || window.location.host === 'actarian.github.io';
-export const DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
+export const STATIC = location.port === '40333' || location.host === 'actarian.github.io';
+export const DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(location.host.split(':')[0]) !== -1;
 export const PRODUCTION = !DEVELOPMENT;
 export const ENV = {
 	NAME: 'ws-events',

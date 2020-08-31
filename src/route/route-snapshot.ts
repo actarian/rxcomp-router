@@ -1,4 +1,4 @@
-import { Component, Factory } from 'rxcomp';
+import { Component, Factory, IElement } from 'rxcomp';
 import { Observable, ReplaySubject } from 'rxjs';
 import { RouteComponent, RouterKeyValue } from '../router.types';
 import { IBaseRoute, Route } from './route';
@@ -28,7 +28,7 @@ export class RouteSnapshot implements IBaseRoute {
 	canLoad: ((route: RouteSnapshot, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]>)[] = [];
 	canActivate: ((route: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[] = [];
 	canActivateChild: ((childRoute: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[] = [];
-	instance?: Component;
+	element?: IElement;
 	constructor(options?: IBaseRoute) {
 		if (options) {
 			Object.assign(this, options);

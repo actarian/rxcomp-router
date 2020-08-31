@@ -17,7 +17,7 @@ export default class AppModule extends Module {
 				{ path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 				{ path: 'dashboard', component: IndexComponent, data: { title: 'Dashboard' } },
 				{
-					path: 'detail/:detailId', component: DetailComponent, data: { title: 'Detail' },
+					path: 'dashboard/:detailId', component: DetailComponent, data: { title: 'Detail' },
 					children: [
 						{ path: 'media', component: SubComponent, data: { title: 'Media' } },
 						{ path: 'files', component: SubComponent, data: { title: 'Files' } }

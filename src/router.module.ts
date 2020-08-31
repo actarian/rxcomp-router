@@ -54,7 +54,7 @@ export default class RouterModule extends Module {
 			}),
 			takeUntil(this.unsubscribe$),
 		).subscribe();
-		RouterService.navigate(`${window.location.pathname}${window.location.search}${window.location.hash}`);
+		RouterService.navigate(`${location.pathname === '' ? '/' : location.pathname}${location.search}${location.hash}`);
 	}
 
 	static meta: IModuleMeta = {
@@ -70,7 +70,7 @@ export default class RouterModule extends Module {
 
 	static forRoot(routes: IRoute[]): typeof RouterModule {
 		RouterService.setRoutes(routes);
-		return RouterModule;
+		return this;
 	}
 
 	static useStrategy(locationStrategyType: typeof LocationStrategy): typeof RouterModule {
