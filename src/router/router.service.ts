@@ -9,8 +9,6 @@ import { RouteSnapshot } from '../route/route-snapshot';
 import { RouteComponent, RouterKeyValue, RouterLink } from '../router.types';
 import { ActivationEnd, ActivationStart, ChildActivationEnd, ChildActivationStart, GuardsCheckEnd, GuardsCheckStart, IRouterEvent, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, ResolveEnd, ResolveStart, RouteConfigLoadEnd, RouteConfigLoadStart, RouterEvent, RoutesRecognized } from './router-events';
 
-// !!! todo: hash navigation strategy
-
 export default class RouterService {
 	static routes: Routes = [];
 	static route$: ReplaySubject<RouteSnapshot> = new ReplaySubject<RouteSnapshot>(1);
@@ -55,7 +53,7 @@ export default class RouterService {
 			urlAfterRedirects = resolvedRoute.redirectTo;
 			resolvedRoute = this.findRouteByUrl(urlAfterRedirects);
 		}
-		console.log('RouterService.findRouteByUrl', resolvedRoute);
+		// console.log('RouterService.findRouteByUrl', resolvedRoute);
 		return resolvedRoute;
 	}
 	static getPath(routerLink: RouterLink = []): RoutePath {
@@ -93,6 +91,7 @@ export default class RouterService {
 		this.locationStrategy_ = new locationStrategyType();
 	}
 }
+
 function getFlatRoutes_(routes: Routes): Routes {
 	const reduceRoutes: (routes: Route[]) => Route[] = (routes: Route[]): Route[] => {
 		return routes.reduce<Routes>((p: Route[], c: Route) => {
@@ -237,11 +236,9 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 	let currentRoute: RouteSnapshot | undefined;
 	// console.log('RouterService.WINDOW', WINDOW!!);
 	const stateEvents$ = isPlatformServer ? EMPTY : merge(fromEvent<PopStateEvent>(WINDOW, 'popstate')).pipe(
-        /*
-        tap((event: PopStateEvent) => {
-            // console.log('location', document.location.pathname, 'state', event.state);
-        }),
-        */
+		tap((event: PopStateEvent) => {
+			console.log('RouterService.onPopState', `location: "${document.location.pathname}"`, `state: "${event.state}"`);
+		}),
 		map(event => new NavigationStart({ routerLink: document.location.pathname, trigger: 'popstate' })),
 		shareReplay(1),
 	);
