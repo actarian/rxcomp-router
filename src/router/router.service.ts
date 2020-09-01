@@ -237,10 +237,10 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 	// console.log('RouterService.WINDOW', WINDOW!!);
 	const stateEvents$ = isPlatformServer ? EMPTY : merge(fromEvent<PopStateEvent>(WINDOW, 'popstate')).pipe(
 		tap((event: PopStateEvent) => {
-			// detech rxcomp !!!
-			event.preventDefault();
-			event.stopImmediatePropagation(); // !!!
-			history.go(1);
+			// detect rxcomp !!!
+			// event.preventDefault();
+			// event.stopImmediatePropagation(); // !!!
+			// history.go(1);
 			console.log('RouterService.onPopState', `location: "${document.location.pathname}"`, `state: "${event.state}"`);
 		}),
 		map(event => new NavigationStart({ routerLink: document.location.pathname, trigger: 'popstate' })),
