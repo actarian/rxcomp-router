@@ -1128,7 +1128,9 @@ function makeCanActivateResponse$_(events$, event) {
 
 function makeObserve$_(routes, route$, events$, locationStrategy) {
   var currentRoute;
-  var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.merge(rxjs.fromEvent(rxcomp.WINDOW, 'popstate')).pipe(operators.map(function (event) {
+  var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.merge(rxjs.fromEvent(rxcomp.WINDOW, 'popstate')).pipe(operators.tap(function (event) {
+    console.log('RouterService.onPopState', "location: \"" + document.location.pathname + "\"", "state: \"" + event.state + "\"");
+  }), operators.map(function (event) {
     return new NavigationStart({
       routerLink: document.location.pathname,
       trigger: 'popstate'
