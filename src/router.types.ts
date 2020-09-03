@@ -11,4 +11,3 @@ export type RouterActivatorResult = Observable<boolean | RouteComponent[]> | Pro
 export type RouterKeyValue = { [key: string]: RouterKeyValue | string | null };
 export type Params = { [key: string]: any; };
 export type Data = { [key: string]: any; };
-

@@ -87,14 +87,14 @@ export default class RouterOutletStructure extends Structure {
 	}
 	private onEnter$_(element?: IElement, instance?: Component): Observable<boolean> {
 		if (element && instance && instance instanceof View) {
-			return asObservable_([element], instance.onEnter);
+			return asObservable([element], instance.onEnter);
 		} else {
 			return of(true);
 		}
 	}
 	private onExit$_(element?: IElement, instance?: Component): Observable<boolean> {
 		if (element && instance && instance instanceof View) {
-			return asObservable_([element], instance.onExit);
+			return asObservable([element], instance.onExit);
 		} else {
 			return of(true);
 		}
@@ -104,8 +104,7 @@ export default class RouterOutletStructure extends Structure {
 		hosts: { host: RouterOutletStructure },
 	};
 }
-
-function asObservable_<T>(args: any[], callback: (...args: any[]) => Observable<T> | Promise<T> | (() => T) | T): Observable<T> {
+export function asObservable<T>(args: any[], callback: (...args: any[]) => Observable<T> | Promise<T> | (() => T) | T): Observable<T> {
 	return Observable.create(function (observer: Observer<T>) {
 		let subscription: Subscription;
 		try {

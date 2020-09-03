@@ -13,10 +13,8 @@ const factories: typeof Factory[] = [
 	RouterLinkDirective,
 	RouterLinkActiveDirective,
 ];
-
 const pipes: typeof Pipe[] = [
 ];
-
 /**
  *  RouterModule Class.
  * @example
@@ -56,7 +54,6 @@ export default class RouterModule extends Module {
 		).subscribe();
 		RouterService.navigate(`${location.pathname === '' ? '/' : location.pathname}${location.search}${location.hash}`);
 	}
-
 	static meta: IModuleMeta = {
 		declarations: [
 			...factories,
@@ -67,12 +64,10 @@ export default class RouterModule extends Module {
 			...pipes,
 		]
 	};
-
 	static forRoot(routes: IRoute[]): typeof RouterModule {
 		RouterService.setRoutes(routes);
 		return this;
 	}
-
 	static useStrategy(locationStrategyType: typeof LocationStrategy): typeof RouterModule {
 		RouterService.useLocationStrategy(locationStrategyType);
 		return this;

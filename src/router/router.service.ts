@@ -91,7 +91,6 @@ export default class RouterService {
 		this.locationStrategy_ = new locationStrategyType();
 	}
 }
-
 function getFlatRoutes_(routes: Routes): Routes {
 	const reduceRoutes: (routes: Route[]) => Route[] = (routes: Route[]): Route[] => {
 		return routes.reduce<Routes>((p: Route[], c: Route) => {
@@ -236,13 +235,15 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 	let currentRoute: RouteSnapshot | undefined;
 	// console.log('RouterService.WINDOW', WINDOW!!);
 	const stateEvents$ = isPlatformServer ? EMPTY : merge(fromEvent<PopStateEvent>(WINDOW, 'popstate')).pipe(
+		/*
 		tap((event: PopStateEvent) => {
 			// detect rxcomp !!!
 			// event.preventDefault();
 			// event.stopImmediatePropagation(); // !!!
 			// history.go(1);
-			console.log('RouterService.onPopState', `location: "${document.location.pathname}"`, `state: "${event.state}"`);
+			// console.log('RouterService.onPopState', `location: "${document.location.pathname}"`, `state: "${event.state}"`);
 		}),
+		*/
 		map(event => new NavigationStart({ routerLink: document.location.pathname, trigger: 'popstate' })),
 		shareReplay(1),
 	);

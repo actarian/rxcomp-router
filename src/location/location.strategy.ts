@@ -19,7 +19,6 @@ export interface ILocationStrategy {
 	getUrl(url: string, params?: URLSearchParams): string;
 	setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
 }
-
 export class LocationStrategy implements ILocationStrategy {
 	serializeLink(routerLink: RouterLink): string {
 		const url: string = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {
@@ -141,15 +140,12 @@ export class LocationStrategy implements ILocationStrategy {
 		}
 	}
 }
-
 export function encodeParam(value: string): string {
 	return `;${value}`;
 }
-
 export function decodeParam(value: string): string {
 	return value.substring(1, value.length);
 }
-
 export class LocationStrategyPath extends LocationStrategy implements ILocationStrategy {
 	serialize(routePath: IRoutePath): string {
 		return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
@@ -196,7 +192,6 @@ export class LocationStrategyPath extends LocationStrategy implements ILocationS
 		return target;
 	}
 }
-
 export class LocationStrategyHash extends LocationStrategy implements ILocationStrategy {
 	serializeLink(routerLink: RouterLink): string {
 		const url: string = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {

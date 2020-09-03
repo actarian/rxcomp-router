@@ -18,7 +18,6 @@ export default class RouterLinkDirective extends Directive {
 		this.routerLink_ = Array.isArray(routerLink) ? routerLink : [routerLink];
 		this.segments = this.getSegments(this.routerLink_);
 	}
-
 	getSegments(routerLink: RouteComponent[]): RouteSegment[] {
 		// console.log('RouterLinkDirective.getSegments', routerLink);
 		const segments: RouteSegment[] = [];
@@ -44,7 +43,6 @@ export default class RouterLinkDirective extends Directive {
 		});
 		return segments;
 	}
-
 	onInit() {
 		const { node } = getContext(this);
 		const event$: Observable<Event> = fromEvent<Event>(node, 'click').pipe(shareReplay(1));
@@ -63,14 +61,12 @@ export default class RouterLinkDirective extends Directive {
 			return false;
 		});
 	}
-
 	onChanges() {
 		const { node } = getContext(this);
 		const routePath: RoutePath = RouterService.getPath(this.routerLink_);
 		// console.log('RouterLinkDirective.routePath', routePath);
 		node.setAttribute('href', routePath.url);
 	}
-
 	static meta: IFactoryMeta = {
 		selector: '[routerLink],[[routerLink]]',
 		inputs: ['routerLink'],
