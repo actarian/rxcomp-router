@@ -3,7 +3,7 @@ All notable changes to the "rxcomp-router" library will be documented in this fi
 
 ---
 
-## [1.0.0-beta.14] - 2020-08-29
+## [1.0.0-beta.16] - 2020-09-04
 ### Added
 - Initial release of RxComp Router library
 

@@ -5,7 +5,7 @@
 }(this, (function (exports) { 'use strict';
 
 	/*!
-	 * EasePack 3.5.0
+	 * EasePack 3.5.1
 	 * https://greensock.com
 	 *
 	 * @license Copyright 2008-2020, GreenSock. All rights reserved.
@@ -201,7 +201,7 @@
 
 	for (var p in EasePack) {
 	  EasePack[p].register = _initCore;
-	  EasePack[p].version = "3.5.0";
+	  EasePack[p].version = "3.5.1";
 	}
 
 	_getGSAP() && gsap.registerPlugin(SlowMo);
@@ -237,7 +237,7 @@
   }
 
   /*!
-   * GSAP 3.5.0
+   * GSAP 3.5.1
    * https://greensock.com
    *
    * @license Copyright 2008-2020, GreenSock. All rights reserved.
@@ -290,7 +290,7 @@
       _isFuncOrString = function _isFuncOrString(value) {
     return _isFunction(value) || _isString(value);
   },
-      _isTypedArray = typeof ArrayBuffer === "function" ? ArrayBuffer.isView : function () {},
+      _isTypedArray = typeof ArrayBuffer === "function" && ArrayBuffer.isView || function () {},
       _isArray = Array.isArray,
       _strictNumExp = /(?:-?\.?\d|\.)+/gi,
       _numExp = /[-+=.]*\d+[.e\-+]*\d*[e\-\+]*\d*/g,
@@ -546,7 +546,7 @@
     child._act = 0;
   },
       _uncache = function _uncache(animation, child) {
-    if (!child || child._end > animation._dur || child._start < 0) {
+    if (animation && (!child || child._end > animation._dur || child._start < 0)) {
       var a = animation;
 
       while (a) {
@@ -668,11 +668,11 @@
       }
     }
 
-    if (!tween._initted && _attemptInitTween(tween, totalTime, force, suppressEvents)) {
-      return;
-    }
-
     if (ratio !== prevRatio || force || tween._zTime === _tinyNum || !totalTime && tween._zTime) {
+      if (!tween._initted && _attemptInitTween(tween, totalTime, force, suppressEvents)) {
+        return;
+      }
+
       prevIteration = tween._zTime;
       tween._zTime = totalTime || (suppressEvents ? _tinyNum : 0);
       suppressEvents || (suppressEvents = totalTime && !prevIteration);
@@ -782,7 +782,7 @@
     return value < min ? min : value > max ? max : value;
   },
       getUnit = function getUnit(value) {
-    return (value + "").substr((parseFloat(value) + "").length);
+    return (value = (value + "").substr((parseFloat(value) + "").length)) && isNaN(value) ? value : "";
   },
       clamp = function clamp(min, max, value) {
     return _conditionalReturn(value, function (v) {
@@ -2130,7 +2130,7 @@
 
             if (doesWrap) {
               this._lock = 2;
-              prevTime = rewinding ? dur + 0.0001 : -0.0001;
+              prevTime = rewinding ? dur : -0.0001;
               this.render(prevTime, true);
               this.vars.repeatRefresh && !isYoyo && this.invalidate();
             }
@@ -2427,6 +2427,7 @@
         ease: "none",
         lazy: false,
         time: endTime,
+        overwrite: "auto",
         duration: vars.duration || Math.abs((endTime - (startAt && "time" in startAt ? startAt.time : tl._time)) / tl.timeScale()) || _tinyNum,
         onStart: function onStart() {
           tl.pause();
@@ -2844,7 +2845,7 @@
         target = targets[i];
         gsData = target._gsap || _harness(targets)[i]._gsap;
         tween._ptLookup[i] = ptLookup = {};
-        _lazyLookup[gsData.id] && _lazyRender();
+        _lazyLookup[gsData.id] && _lazyTweens.length && _lazyRender();
         index = fullTargets === targets ? i : fullTargets.indexOf(target);
 
         if (harness && (plugin = new harness()).init(target, harnessVars || cleanVars, tween, index, fullTargets) !== false) {
@@ -3740,7 +3741,7 @@
       }
     }
   }, _buildModifierPlugin("roundProps", _roundModifier), _buildModifierPlugin("modifiers"), _buildModifierPlugin("snap", snap)) || _gsap;
-  Tween.version = Timeline.version = gsap.version = "3.5.0";
+  Tween.version = Timeline.version = gsap.version = "3.5.1";
   _coreReady = 1;
 
   if (_windowExists()) {
@@ -4945,12 +4946,8 @@
           if (isTransformRelated || (endNum || endNum === 0) && (startNum || startNum === 0) && !_complexExp.test(endValue) && p in style) {
             startUnit = (startValue + "").substr((startNum + "").length);
             endNum || (endNum = 0);
-            endUnit = (endValue + "").substr((endNum + "").length) || (p in _config.units ? _config.units[p] : startUnit);
-
-            if (startUnit !== endUnit) {
-              startNum = _convertToUnit(target, p, startValue, endUnit);
-            }
-
+            endUnit = getUnit(endValue) || (p in _config.units ? _config.units[p] : startUnit);
+            startUnit !== endUnit && (startNum = _convertToUnit(target, p, startValue, endUnit));
             this._pt = new PropTween(this._pt, isTransformRelated ? cache : style, p, startNum, relative ? relative * endNum : endNum - startNum, endUnit === "px" && vars.autoRound !== false && !isTransformRelated ? _renderRoundedCSSProp : _renderCSSProp);
             this._pt.u = endUnit || 0;
 
@@ -14465,7 +14462,7 @@
 
 
 /**
- * @license rxcomp v1.0.0-beta.14
+ * @license rxcomp v1.0.0-beta.16
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -14632,6 +14629,23 @@ var Factory = /*#__PURE__*/function () {
     this.rxcompId = -1;
     this.unsubscribe$ = new rxjs.Subject();
     this.changes$ = new rxjs.ReplaySubject(1);
+    /*
+    // !!! PROXY
+    const store: { [key: string]: any } = {};
+    const handler: ProxyHandler<Factory> = {
+        get: function (target: Factory, prop: string, receiver: any) {
+            return target[prop];
+        },
+        set: function (target: Factory, prop: string | number | Symbol, value: any, receiver: any) {
+            store[prop as string] = value;
+            console.log('Factory updating store', prop, value, store);
+            target[prop as string] = value;
+            return true;
+        }
+    }
+    const proxy = new Proxy(this, handler);
+    console.log('proxy', proxy);
+    */
   }
 
   var _proto = Factory.prototype;
@@ -14652,6 +14666,20 @@ var Factory = /*#__PURE__*/function () {
       this.changes$.next(this);
       this.onView();
     }
+  };
+
+  _proto.onParentDidChange = function onParentDidChange(changes) {
+    var _getContext2 = getContext(this),
+        module = _getContext2.module; // console.log('Component.onParentDidChange', changes);
+
+
+    module.resolveInputsOutputs(this, changes);
+    this.onChanges(changes);
+    this.pushChanges();
+  };
+
+  Factory.getInputsTokens = function getInputsTokens(instance) {
+    return this.meta.inputs || [];
   };
 
   return Factory;
@@ -14765,27 +14793,12 @@ var ErrorInterceptorHandler = /*#__PURE__*/function () {
 
   return ErrorInterceptorHandler;
 }();
-/*
-export class NoopErrorInterceptor implements IErrorInterceptor {
-    intercept(error: Error, next: ErrorHandler): Observable<Error> {
-        return of(error);
-    }
-}
-
-const noopInterceptor = new NoopErrorInterceptor();
-*/
-
 var DefaultErrorHandler = /*#__PURE__*/function () {
   function DefaultErrorHandler() {}
 
   var _proto2 = DefaultErrorHandler.prototype;
 
   _proto2.handle = function handle(error) {
-    /*
-    if (error) {
-        console.error(error);
-    }
-    */
     return rxjs.of(error);
   };
 
@@ -14793,17 +14806,7 @@ var DefaultErrorHandler = /*#__PURE__*/function () {
 }();
 var ErrorInterceptors = [];
 var nextError$ = new rxjs.ReplaySubject(1);
-var errors$ = nextError$.pipe(
-/*
-switchMap(error => {
-    const chain = ErrorInterceptors.reduceRight((next: ErrorHandler, interceptor: IErrorInterceptor) => {
-        return new ErrorInterceptorHandler(next, interceptor);
-    }, new NoopErrorInterceptor());
-    return chain.handle(error);
-}),
-*/
-// switchMap(error => merge(ErrorInterceptors.map(x => x.intercept(error, next)))),
-operators.switchMap(function (error) {
+var errors$ = nextError$.pipe(operators.switchMap(function (error) {
   var chain = ErrorInterceptors.reduceRight(function (next, interceptor) {
     return new ErrorInterceptorHandler(next, interceptor);
   }, new DefaultErrorHandler());
@@ -14832,8 +14835,7 @@ var EventDirective = /*#__PURE__*/function (_Directive) {
         module = _getContext.module,
         node = _getContext.node,
         parentInstance = _getContext.parentInstance,
-        selector = _getContext.selector; // console.log('parentInstance', parentInstance);
-
+        selector = _getContext.selector;
 
     var event = this.event = selector.replace(/\[|\]|\(|\)/g, '');
     var event$ = rxjs.fromEvent(node, event).pipe(operators.shareReplay(1));
@@ -14877,12 +14879,8 @@ EventDirective.meta = {
         node = _getContext.node;
 
     if (module.instances) {
-      // console.log(new Error(`pushChanges ${instance.constructor.name}`).stack);
-      this.changes$.next(this); // console.log('Module.parse', instance.constructor.name);
-      // parse component text nodes
-
-      module.parse(node, this); // calling onView event
-
+      this.changes$.next(this);
+      module.parse(node, this);
       this.onView();
     }
   };
@@ -14922,11 +14920,17 @@ var Context = /*#__PURE__*/function (_Component) {
 
     if (context.module.instances) {
       context.keys.forEach(function (key) {
+        // console.log('Context', key, context.parentInstance);
         _this2[key] = context.parentInstance[key];
       });
     }
 
     _Component.prototype.pushChanges.call(this);
+  };
+
+  _proto.onParentDidChange = function onParentDidChange(changes) {
+    this.onChanges(changes);
+    this.pushChanges();
   };
 
   Context.mergeDescriptors = function mergeDescriptors(source, instance, descriptors) {
@@ -15039,27 +15043,22 @@ var Context = /*#__PURE__*/function (_Component) {
 
   _proto.onInit = function onInit() {
     var _getContext = getContext(this),
-        module = _getContext.module,
         node = _getContext.node;
 
-    var forbegin = document.createComment("*for begin");
+    var forbegin = this.forbegin = document.createComment("*for begin");
     forbegin.rxcompId = node.rxcompId;
     node.parentNode.replaceChild(forbegin, node);
     var forend = this.forend = document.createComment("*for end");
     forbegin.parentNode.insertBefore(forend, forbegin.nextSibling);
-    var expression = node.getAttribute('*for');
     node.removeAttribute('*for');
-    var token = this.token = this.getExpressionToken(expression);
-    this.forFunction = module.makeFunction(token.iterable);
   };
 
-  _proto.onChanges = function onChanges(changes) {
+  _proto.onChanges = function onChanges() {
     var context = getContext(this);
     var module = context.module;
-    var node = context.node; // resolve
-
-    var token = this.token;
-    var result = module.resolve(this.forFunction, changes, this) || [];
+    var node = context.node;
+    var tokens = this.tokens;
+    var result = this[tokens.iterable];
     var isArray = Array.isArray(result);
     var array = isArray ? result : Object.keys(result);
     var total = array.length;
@@ -15073,33 +15072,21 @@ var Context = /*#__PURE__*/function (_Component) {
         if (i < previous) {
           // update
           var instance = this.instances[i];
-          instance[token.key] = key;
-          instance[token.value] = value;
-          /*
-          if (!nextSibling) {
-              const context = getContext(instance);
-              const node = context.node;
-              this.forend.parentNode.insertBefore(node, this.forend);
-          } else {
-              nextSibling = nextSibling.nextSibling;
-          }
-          */
+          instance[tokens.key] = key;
+          instance[tokens.value] = value;
         } else {
           // create
           var clonedNode = node.cloneNode(true);
           delete clonedNode.rxcompId;
-          this.forend.parentNode.insertBefore(clonedNode, this.forend); // !!! todo: check context.parentInstance
+          this.forend.parentNode.insertBefore(clonedNode, this.forend);
+          var args = [tokens.key, key, tokens.value, value, i, total, context.parentInstance];
+          var skipSubscription = true;
 
-          var args = [token.key, key, token.value, value, i, total, context.parentInstance];
-
-          var _instance = module.makeInstance(clonedNode, ForItem, context.selector, context.parentInstance, args);
+          var _instance = module.makeInstance(clonedNode, ForItem, context.selector, context.parentInstance, args, undefined, skipSubscription);
 
           if (_instance) {
-            // const forItemContext = getContext(instance);
-            // console.log('ForStructure', clonedNode, forItemContext.instance.constructor.name);
-            // module.compile(clonedNode, forItemContext.instance);
-            module.compile(clonedNode, _instance); // nextSibling = clonedNode.nextSibling;
-
+            module.compile(clonedNode, _instance);
+            module.makeInstanceSubscription(_instance, context.parentInstance);
             this.instances.push(_instance);
           }
         }
@@ -15116,10 +15103,19 @@ var Context = /*#__PURE__*/function (_Component) {
       }
     }
 
-    this.instances.length = array.length; // console.log('ForStructure', this.instances, token);
+    this.instances.length = array.length;
   };
 
-  _proto.getExpressionToken = function getExpressionToken(expression) {
+  ForStructure.getInputsTokens = function getInputsTokens(instance) {
+    var _getContext3 = getContext(instance),
+        node = _getContext3.node;
+
+    var expression = node.getAttribute('*for');
+    var tokens = instance.tokens = ForStructure.getForExpressionTokens(expression);
+    return [tokens.iterable];
+  };
+
+  ForStructure.getForExpressionTokens = function getForExpressionTokens(expression) {
     if (expression === null) {
       throw new Error('invalid for');
     }
@@ -15166,7 +15162,8 @@ var Context = /*#__PURE__*/function (_Component) {
   return ForStructure;
 }(Structure);
 ForStructure.meta = {
-  selector: '[*for]'
+  selector: '[*for]',
+  inputs: ['for']
 };var HrefDirective = /*#__PURE__*/function (_Directive) {
   _inheritsLoose(HrefDirective, _Directive);
 
@@ -15207,7 +15204,6 @@ HrefDirective.meta = {
 
   _proto.onInit = function onInit() {
     var _getContext = getContext(this),
-        module = _getContext.module,
         node = _getContext.node;
 
     var ifbegin = this.ifbegin = document.createComment("*if begin");
@@ -15215,23 +15211,20 @@ HrefDirective.meta = {
     node.parentNode.replaceChild(ifbegin, node);
     var ifend = this.ifend = document.createComment("*if end");
     ifbegin.parentNode.insertBefore(ifend, ifbegin.nextSibling);
-    var expression = node.getAttribute('*if');
-    this.ifFunction = module.makeFunction(expression);
     var clonedNode = node.cloneNode(true);
     clonedNode.removeAttribute('*if');
     this.clonedNode = clonedNode;
-    this.element = clonedNode.cloneNode(true); // console.log('IfStructure.expression', expression);
+    this.element = clonedNode.cloneNode(true);
   };
 
-  _proto.onChanges = function onChanges(changes) {
+  _proto.onChanges = function onChanges() {
     var _getContext2 = getContext(this),
-        module = _getContext2.module; // console.log('IfStructure.onChanges', changes);
+        module = _getContext2.module;
 
-
-    var value = module.resolve(this.ifFunction, changes, this);
     var element = this.element;
 
-    if (value) {
+    if (this.if != null) {
+      // !!! keep == loose equality
       if (!element.parentNode) {
         var ifend = this.ifend;
         ifend.parentNode.insertBefore(element, ifend);
@@ -15249,7 +15242,8 @@ HrefDirective.meta = {
   return IfStructure;
 }(Structure);
 IfStructure.meta = {
-  selector: '[*if]'
+  selector: '[*if]',
+  inputs: ['if']
 };var InnerHtmlDirective = /*#__PURE__*/function (_Directive) {
   _inheritsLoose(InnerHtmlDirective, _Directive);
 
@@ -15348,11 +15342,7 @@ var Platform = /*#__PURE__*/function () {
     module.meta = meta;
     meta.imports.forEach(function (moduleFactory) {
       moduleFactory.prototype.constructor.call(module);
-    }); // const instances = module.compile(meta.node, window);
-    // module.instances = instances;
-    // const root = instances[0];
-    // root.pushChanges();
-
+    });
     return module;
   };
 
@@ -15663,7 +15653,7 @@ function _decodeBase(value) {
 }(Pipe);
 JsonPipe.meta = {
   name: 'json'
-};var ID = 0;
+};var WINDOW = typeof self === 'object' && self.self === self && self || typeof global === 'object' && global.global === global && global || undefined;var ID = 0;
 
 var Module = /*#__PURE__*/function () {
   function Module() {
@@ -15696,8 +15686,10 @@ var Module = /*#__PURE__*/function () {
     return instances;
   };
 
-  _proto.makeInstance = function makeInstance(node, factory, selector, parentInstance, args, inject) {
-    var _this2 = this;
+  _proto.makeInstance = function makeInstance(node, factory, selector, parentInstance, args, inject, skipSubscription) {
+    if (skipSubscription === void 0) {
+      skipSubscription = false;
+    }
 
     if (parentInstance || node.parentNode) {
       var meta = factory.meta; // collect parentInstance scope
@@ -15727,9 +15719,9 @@ var Module = /*#__PURE__*/function () {
 
       var context = Module.makeContext(this, instance, parentInstance, node, factory, selector); // creating component input and outputs
 
-      if (meta) {
+      if (!(instance instanceof Context)) {
         this.makeHosts(meta, instance, node);
-        context.inputs = this.makeInputs(meta, instance);
+        context.inputs = this.makeInputs(meta, instance, factory);
         context.outputs = this.makeOutputs(meta, instance);
 
         if (parentInstance instanceof Factory) {
@@ -15740,31 +15732,8 @@ var Module = /*#__PURE__*/function () {
 
       instance.onInit(); // subscribe to parent changes
 
-      if (parentInstance instanceof Factory) {
-        parentInstance.changes$.pipe( // filter(() => node.parentNode),
-        // debounceTime(1),
-
-        /*
-        distinctUntilChanged(function(prev, curr) {
-            // console.log(isComponent, context.inputs);
-            if (isComponent && meta && Object.keys(context.inputs).length === 0) {
-                return true; // same
-            } else {
-                return false;
-            }
-        }),
-        */
-        operators.takeUntil(instance.unsubscribe$)).subscribe(function (changes) {
-          // resolve component input outputs
-          if (meta) {
-            _this2.resolveInputsOutputs(instance, changes);
-          } // calling onChanges event with changes
-
-
-          instance.onChanges(changes); // push instance changes for subscribers
-
-          instance.pushChanges();
-        });
+      if (!skipSubscription) {
+        this.makeInstanceSubscription(instance, parentInstance);
       }
 
       return instance;
@@ -15773,33 +15742,41 @@ var Module = /*#__PURE__*/function () {
     }
   };
 
+  _proto.makeInstanceSubscription = function makeInstanceSubscription(instance, parentInstance) {
+    if (parentInstance instanceof Factory) {
+      parentInstance.changes$.pipe( // distinctUntilChanged(deepEqual),
+      operators.takeUntil(instance.unsubscribe$)).subscribe(function (changes) {
+        instance.onParentDidChange(changes);
+      });
+    }
+  };
+
   _proto.makeFunction = function makeFunction(expression, params) {
     if (params === void 0) {
       params = ['$instance'];
     }
 
-    if (expression) {
-      expression = Module.parseExpression(expression); // console.log(expression);
+    expression = Module.parseExpression(expression);
+    var expressionFunction = "with(this) {\n\treturn (function (" + params.join(',') + ", $$module) {\n\t\ttry {\n\t\t\tconst $$pipes = $$module.meta.pipes;\n\t\t\treturn " + expression + ";\n\t\t} catch(error) {\n\t\t\t$$module.nextError(error, this, " + JSON.stringify(expression) + ", arguments);\n\t\t}\n\t}.bind(this)).apply(this, arguments);\n}"; // console.log('Module.makeFunction.expressionFunction', expressionFunction);
 
-      var args = params.join(',');
-      var expression_func = new Function("with(this) {\n\t\t\t\treturn (function (" + args + ", $$module) {\n\t\t\t\t\ttry {\n\t\t\t\t\t\tconst $$pipes = $$module.meta.pipes;\n\t\t\t\t\t\treturn " + expression + ";\n\t\t\t\t\t} catch(error) {\n\t\t\t\t\t\t$$module.nextError(error, this, " + JSON.stringify(expression) + ", arguments);\n\t\t\t\t\t}\n\t\t\t\t}.bind(this)).apply(this, arguments);\n\t\t\t}"); // console.log(this, $$module, $$pipes, "${expression}");
-      // console.log(expression_func);
+    return new Function(expressionFunction); // return () => { return null; };
+  };
 
-      return expression_func;
-    } else {
-      return function () {
-        return null;
-      };
+  _proto.resolveInputsOutputs = function resolveInputsOutputs(instance, changes) {
+    var context = getContext(instance);
+    var parentInstance = context.parentInstance;
+    var inputs = context.inputs;
+
+    for (var key in inputs) {
+      var inputFunction = inputs[key]; // console.log('Module.inputFunction', inputFunction);
+
+      var value = this.resolve(inputFunction, parentInstance, instance);
+      instance[key] = value;
     }
   };
 
-  _proto.nextError = function nextError(error, instance, expression, params) {
-    var expressionError = new ExpressionError(error, this, instance, expression, params);
-    nextError$.next(expressionError);
-  };
-
   _proto.resolve = function resolve(expression, parentInstance, payload) {
-    // console.log(expression, parentInstance, payload);
+    // console.log('Module.resolve', expression, parentInstance, payload, getContext);
     return expression.apply(parentInstance, [payload, this]);
   };
 
@@ -15809,7 +15786,7 @@ var Module = /*#__PURE__*/function () {
 
       if (child.nodeType === 1) {
         var element = child;
-        var context = getParsableContextByNode(element);
+        var context = getParsableContextByElement(element);
 
         if (!context) {
           this.parse(element, instance);
@@ -15844,15 +15821,127 @@ var Module = /*#__PURE__*/function () {
     this.meta.node.innerHTML = this.meta.nodeInnerHTML;
   };
 
+  _proto.nextError = function nextError(error, instance, expression, params) {
+    var expressionError = new ExpressionError(error, this, instance, expression, params);
+    nextError$.next(expressionError);
+  };
+
   _proto.makeContext = function makeContext(instance, parentInstance, node, selector) {
     var context = Module.makeContext(this, instance, parentInstance, node, instance.constructor, selector); // console.log('Module.makeContext', context, context.instance, context.node);
 
     return context;
   };
 
+  _proto.makeHosts = function makeHosts(meta, instance, node) {
+    if (meta.hosts) {
+      Object.keys(meta.hosts).forEach(function (key) {
+        var factory = meta.hosts[key];
+        instance[key] = getHost(instance, factory, node);
+      });
+    }
+  };
+
+  _proto.makeInput = function makeInput(instance, key) {
+    // console.log('Module.makeInput', 'key', key, 'instance', instance);
+    var _getContext = getContext(instance),
+        node = _getContext.node;
+
+    var input = null,
+        expression = null;
+
+    if (node.hasAttribute("[" + key + "]")) {
+      expression = node.getAttribute("[" + key + "]"); // console.log('Module.makeInput.expression.1', expression);
+    } else if (node.hasAttribute("*" + key)) {
+      expression = node.getAttribute("*" + key); // console.log('Module.makeInput.expression.2', expression);
+    } else if (node.hasAttribute(key)) {
+      expression = node.getAttribute(key);
+
+      if (expression) {
+        var attribute = expression.replace(/({{)|(}})|(")/g, function (substring, a, b, c) {
+          if (a) {
+            return '"+';
+          }
+
+          if (b) {
+            return '+"';
+          }
+
+          if (c) {
+            return '\"';
+          }
+
+          return '';
+        });
+        expression = "\"" + attribute + "\""; // console.log('Module.makeInput.expression.3', expression);
+      }
+    }
+
+    expression = expression || key;
+
+    if (expression) {
+      instance[key] = instance[key] || null; // !!! avoid throError undefined key
+
+      input = this.makeFunction(expression);
+    } // console.log('Module.makeInput', key, instance, descriptor);
+
+
+    return input;
+  };
+
+  _proto.makeInputs = function makeInputs(meta, instance, factory) {
+    var _this2 = this;
+
+    var inputs = {};
+    factory.getInputsTokens(instance).forEach(function (key) {
+      var input = _this2.makeInput(instance, key);
+
+      if (input) {
+        inputs[key] = input;
+      }
+    });
+    return inputs;
+  };
+
+  _proto.makeOutput = function makeOutput(instance, key) {
+    var _this3 = this;
+
+    var context = getContext(instance);
+    var node = context.node;
+    var parentInstance = context.parentInstance;
+    var expression = node.getAttribute("(" + key + ")");
+    var outputExpression = expression ? this.makeFunction(expression, ['$event']) : null;
+    var output$ = new rxjs.Subject().pipe(operators.tap(function (event) {
+      if (outputExpression) {
+        // console.log(expression, parentInstance);
+        _this3.resolve(outputExpression, parentInstance, event);
+      }
+    }));
+    output$.pipe(operators.takeUntil(instance.unsubscribe$)).subscribe();
+    instance[key] = output$;
+    return output$;
+  };
+
+  _proto.makeOutputs = function makeOutputs(meta, instance) {
+    var _this4 = this;
+
+    var outputs = {};
+
+    if (meta.outputs) {
+      meta.outputs.forEach(function (key) {
+        var output = _this4.makeOutput(instance, key);
+
+        if (output) {
+          outputs[key] = output;
+        }
+      });
+    }
+
+    return outputs;
+  };
+
   _proto.getInstance = function getInstance(node) {
     if (node === document) {
-      return isPlatformBrowser ? window : global;
+      return WINDOW; // (isPlatformBrowser ? window : global) as Window;
     }
 
     var context = getContextByNode(node);
@@ -15865,15 +15954,15 @@ var Module = /*#__PURE__*/function () {
   };
 
   _proto.getParentInstance = function getParentInstance(node) {
-    var _this3 = this;
+    var _this5 = this;
 
     return Module.traverseUp(node, function (node) {
-      return _this3.getInstance(node);
+      return _this5.getInstance(node);
     });
   };
 
   _proto.parseTextNode = function parseTextNode(node, instance) {
-    var _this4 = this;
+    var _this6 = this;
 
     var expressions = node.nodeExpressions;
 
@@ -15887,7 +15976,8 @@ var Module = /*#__PURE__*/function () {
 
         if (typeof c === 'function') {
           // instanceOf ExpressionFunction ?;
-          text = _this4.resolve(c, instance, instance);
+          // console.log('Module.parseTextNode', c, instance);
+          text = _this6.resolve(c, instance, instance);
 
           if (text == undefined) {
             // !!! keep == loose equality
@@ -15929,9 +16019,13 @@ var Module = /*#__PURE__*/function () {
       }
 
       lastIndex = regex.lastIndex;
-      var expression = this.makeFunction(matches[1]);
-      expressions.push(expression);
-    }
+
+      if (matches[1]) {
+        var expression = this.makeFunction(matches[1]);
+        expressions.push(expression);
+      }
+    } // console.log('Module.parseTextNodeExpression', regex.source, expressions, nodeValue);
+
 
     var length = nodeValue.length;
 
@@ -15948,116 +16042,21 @@ var Module = /*#__PURE__*/function () {
     }
   };
 
-  _proto.makeHosts = function makeHosts(meta, instance, node) {
-    if (meta.hosts) {
-      Object.keys(meta.hosts).forEach(function (key) {
-        var factory = meta.hosts[key];
-        instance[key] = getHost(instance, factory, node);
-      });
-    }
-  };
-
-  _proto.makeInput = function makeInput(instance, key) {
-    var _getContext = getContext(instance),
-        node = _getContext.node;
-
-    var input = null,
-        expression = null;
-
-    if (node.hasAttribute("[" + key + "]")) {
-      expression = node.getAttribute("[" + key + "]");
-    } else if (node.hasAttribute(key)) {
-      // const attribute = node.getAttribute(key).replace(/{{/g, '"+').replace(/}}/g, '+"');
-      var attribute = node.getAttribute(key).replace(/({{)|(}})|(")/g, function (substring, a, b, c) {
-        if (a) {
-          return '"+';
-        }
-
-        if (b) {
-          return '+"';
-        }
-
-        if (c) {
-          return '\"';
-        }
-
-        return '';
-      });
-      expression = "\"" + attribute + "\"";
-    }
-
-    if (expression) {
-      input = this.makeFunction(expression);
-    }
-
-    return input;
-  };
-
-  _proto.makeInputs = function makeInputs(meta, instance) {
-    var _this5 = this;
-
-    var inputs = {};
-
-    if (meta.inputs) {
-      meta.inputs.forEach(function (key, i) {
-        var input = _this5.makeInput(instance, key);
-
-        if (input) {
-          inputs[key] = input;
-        }
-      });
-    }
-
-    return inputs;
-  };
-
-  _proto.makeOutput = function makeOutput(instance, key) {
-    var _this6 = this;
-
-    var context = getContext(instance);
-    var node = context.node;
-    var parentInstance = context.parentInstance;
-    var expression = node.getAttribute("(" + key + ")");
-    var outputFunction = expression ? this.makeFunction(expression, ['$event']) : null;
-    var output$ = new rxjs.Subject().pipe(operators.tap(function (event) {
-      if (outputFunction) {
-        // console.log(expression, parentInstance);
-        _this6.resolve(outputFunction, parentInstance, event);
-      }
-    }));
-    output$.pipe(operators.takeUntil(instance.unsubscribe$)).subscribe();
-    instance[key] = output$;
-    return output$;
-  };
-
-  _proto.makeOutputs = function makeOutputs(meta, instance) {
-    var _this7 = this;
-
-    var outputs = {};
-
-    if (meta.outputs) {
-      meta.outputs.forEach(function (key) {
-        var output = _this7.makeOutput(instance, key);
-
-        if (output) {
-          outputs[key] = output;
-        }
-      });
-    }
-
-    return outputs;
-  };
-
-  _proto.resolveInputsOutputs = function resolveInputsOutputs(instance, changes) {
-    var context = getContext(instance);
-    var parentInstance = context.parentInstance;
-    var inputs = context.inputs;
-
-    for (var key in inputs) {
-      var inputFunction = inputs[key];
-      var value = this.resolve(inputFunction, parentInstance, instance);
-      instance[key] = value;
-    }
+  Module.makeContext = function makeContext(module, instance, parentInstance, node, factory, selector) {
+    instance.rxcompId = ++ID;
+    var context = {
+      module: module,
+      instance: instance,
+      parentInstance: parentInstance,
+      node: node,
+      factory: factory,
+      selector: selector
+    };
+    var rxcompNodeId = node.rxcompId = node.rxcompId || instance.rxcompId;
+    var nodeContexts = NODES[rxcompNodeId] || (NODES[rxcompNodeId] = []);
+    nodeContexts.push(context);
+    CONTEXTS[instance.rxcompId] = context;
+    return context;
   };
 
   Module.parseExpression = function parseExpression(expression) {
@@ -16152,23 +16151,6 @@ var Module = /*#__PURE__*/function () {
       return previous || '';
     });
     return expression;
-  };
-
-  Module.makeContext = function makeContext(module, instance, parentInstance, node, factory, selector) {
-    instance.rxcompId = ++ID;
-    var context = {
-      module: module,
-      instance: instance,
-      parentInstance: parentInstance,
-      node: node,
-      factory: factory,
-      selector: selector
-    };
-    var rxcompNodeId = node.rxcompId = node.rxcompId || instance.rxcompId;
-    var nodeContexts = NODES[rxcompNodeId] || (NODES[rxcompNodeId] = []);
-    nodeContexts.push(context);
-    CONTEXTS[instance.rxcompId] = context;
-    return context;
   };
 
   Module.deleteContext = function deleteContext(id, keepContext) {
@@ -16327,37 +16309,34 @@ var Module = /*#__PURE__*/function () {
 
   return Module;
 }();
-function getParsableContextByNode(node) {
+function getParsableContextByElement(element) {
   var context;
-  var rxcompId = node.rxcompId;
+  var rxcompId = element.rxcompId;
 
   if (rxcompId) {
-    var nodeContexts = NODES[rxcompId];
+    var contexts = NODES[rxcompId];
 
-    if (nodeContexts) {
-      context = nodeContexts.reduce(function (previous, current) {
-        if (current.factory.prototype instanceof Component) {
-          return current;
-        } else if (current.factory.prototype instanceof Context) {
+    if (contexts) {
+      context = contexts.reduce(function (previous, current) {
+        if (current.instance instanceof Context) {
           return previous ? previous : current;
-          /*
-          } else if (current.factory.prototype instanceof Structure) {
-              return previous ? previous : current;
-          */
+        } else if (current.instance instanceof Component) {
+          return current;
         } else {
           return previous;
         }
-      }, undefined); // console.log(node.rxcompId, context);
-    }
+      }, undefined);
+    } // context = contexts ? contexts.find(x => x.instance instanceof Component) : undefined;
+
   }
 
   return context;
 }
-function getContextByNode(node) {
-  var context = getParsableContextByNode(node);
+function getContextByNode(element) {
+  var context = getParsableContextByElement(element);
 
   if (context && context.factory.prototype instanceof Structure) {
-    context = undefined;
+    return undefined;
   }
 
   return context;
@@ -16390,7 +16369,44 @@ function getHost(instance, factory, node) {
   } else {
     return undefined;
   }
-}var SrcDirective = /*#__PURE__*/function (_Directive) {
+}
+/*
+export function deepEqual(prev: any, curr: any, pool: any[] = []): boolean {
+    let equal: boolean = typeof prev === typeof curr;
+    if (prev && pool.indexOf(prev) === -1 && pool.indexOf(curr) === -1) {
+        pool.push(prev, curr);
+        const type = Array.isArray(curr) ? 'array' : typeof curr;
+        switch (type) {
+            case 'array':
+                equal = prev.length === curr.length;
+                equal = equal && prev.reduce((p: boolean, a: any[], i: number) => p && deepEqual(a, curr[i], pool), true);
+                break;
+            case 'object':
+                if ('Symbol' in WINDOW && Symbol.iterator in prev) {
+                    // || prev instanceof Map
+                    equal = prev.size === curr.size;
+                    const ea = prev.entries();
+                    const eb = curr.entries();
+                    for (let item = ea.next(); item.done !== true; item = ea.next()) {
+                        const ia = item.value;
+                        const ib = eb.next().value;
+                        equal = equal && deepEqual(ia, ib, pool);
+                    }
+                } else {
+                    const prevKeys = Object.keys(prev);
+                    const currKeys = Object.keys(curr);
+                    equal = prevKeys.length === currKeys.length;
+                    equal = equal && prevKeys.reduce((p: boolean, k: string) => p && deepEqual(prev[k], curr[k], pool), true);
+                }
+                break;
+            default:
+                equal = prev === curr;
+        }
+    }
+    console.log(equal, prev, curr);
+    return equal;
+}
+*/var SrcDirective = /*#__PURE__*/function (_Directive) {
   _inheritsLoose(SrcDirective, _Directive);
 
   function SrcDirective() {
@@ -16500,7 +16516,7 @@ CoreModule.meta = {
    */
   Browser.bootstrap = function bootstrap(moduleFactory) {
     if (!isPlatformBrowser) {
-      throw new ModuleError('missing platform browser, window not found');
+      throw new ModuleError('missing platform browser, Window not found');
     }
 
     if (!moduleFactory) {
@@ -16530,25 +16546,23 @@ CoreModule.meta = {
       moduleFactory.prototype.constructor.call(module);
     });
 
-    if (window.rxcomp_hydrate_) {
+    if (WINDOW.rxcomp_hydrate_) {
       var _meta$node$parentNode;
 
       var clonedNode = meta.node.cloneNode();
-      clonedNode.innerHTML = meta.nodeInnerHTML = window.rxcomp_hydrate_.innerHTML;
-      var instances = module.compile(clonedNode, window);
+      clonedNode.innerHTML = meta.nodeInnerHTML = WINDOW.rxcomp_hydrate_.innerHTML;
+      var instances = module.compile(clonedNode, WINDOW);
       module.instances = instances;
-      var root = instances[0]; // if (root instanceof module.meta.bootstrap) {
-
+      var root = instances[0];
       root.pushChanges();
-      (_meta$node$parentNode = meta.node.parentNode) == null ? void 0 : _meta$node$parentNode.replaceChild(clonedNode, meta.node); // }
+      (_meta$node$parentNode = meta.node.parentNode) == null ? void 0 : _meta$node$parentNode.replaceChild(clonedNode, meta.node);
     } else {
-      var _instances = module.compile(meta.node, window);
+      var _instances = module.compile(meta.node, WINDOW);
 
       module.instances = _instances;
-      var _root = _instances[0]; // if (root instanceof module.meta.bootstrap) {
+      var _root = _instances[0];
 
-      _root.pushChanges(); // }
-
+      _root.pushChanges();
     }
 
     return module;
@@ -16668,4 +16682,4 @@ function optionsToKey(v, s) {
   }
 
   return s;
-}var WINDOW = typeof self === 'object' && self.self === self && self || typeof global === 'object' && global.global === global && global || undefined;exports.Browser=Browser;exports.ClassDirective=ClassDirective;exports.Component=Component;exports.Context=Context;exports.CoreModule=CoreModule;exports.DefaultErrorHandler=DefaultErrorHandler;exports.Directive=Directive;exports.ErrorInterceptorHandler=ErrorInterceptorHandler;exports.ErrorInterceptors=ErrorInterceptors;exports.EventDirective=EventDirective;exports.ExpressionError=ExpressionError;exports.Factory=Factory;exports.ForItem=ForItem;exports.ForStructure=ForStructure;exports.HrefDirective=HrefDirective;exports.IfStructure=IfStructure;exports.InnerHtmlDirective=InnerHtmlDirective;exports.JsonComponent=JsonComponent;exports.JsonPipe=JsonPipe;exports.Module=Module;exports.ModuleError=ModuleError;exports.PLATFORM_BROWSER=PLATFORM_BROWSER;exports.PLATFORM_JS_DOM=PLATFORM_JS_DOM;exports.PLATFORM_NODE=PLATFORM_NODE;exports.PLATFORM_WEB_WORKER=PLATFORM_WEB_WORKER;exports.Pipe=Pipe;exports.Platform=Platform;exports.Serializer=Serializer;exports.SrcDirective=SrcDirective;exports.Structure=Structure;exports.StyleDirective=StyleDirective;exports.TransferService=TransferService;exports.WINDOW=WINDOW;exports.decodeBase64=_decodeBase;exports.decodeJson=_decodeJson;exports.encodeBase64=_encodeBase;exports.encodeJson=_encodeJson;exports.encodeJsonWithOptions=encodeJsonWithOptions;exports.errors$=errors$;exports.getContext=getContext;exports.getContextByNode=getContextByNode;exports.getHost=getHost;exports.getLocationComponents=getLocationComponents;exports.getParsableContextByNode=getParsableContextByNode;exports.isPlatformBrowser=isPlatformBrowser;exports.isPlatformServer=isPlatformServer;exports.isPlatformWorker=isPlatformWorker;exports.nextError$=nextError$;exports.optionsToKey=optionsToKey;Object.defineProperty(exports,'__esModule',{value:true});})));
+}exports.Browser=Browser;exports.ClassDirective=ClassDirective;exports.Component=Component;exports.Context=Context;exports.CoreModule=CoreModule;exports.DefaultErrorHandler=DefaultErrorHandler;exports.Directive=Directive;exports.ErrorInterceptorHandler=ErrorInterceptorHandler;exports.ErrorInterceptors=ErrorInterceptors;exports.EventDirective=EventDirective;exports.ExpressionError=ExpressionError;exports.Factory=Factory;exports.ForItem=ForItem;exports.ForStructure=ForStructure;exports.HrefDirective=HrefDirective;exports.IfStructure=IfStructure;exports.InnerHtmlDirective=InnerHtmlDirective;exports.JsonComponent=JsonComponent;exports.JsonPipe=JsonPipe;exports.Module=Module;exports.ModuleError=ModuleError;exports.PLATFORM_BROWSER=PLATFORM_BROWSER;exports.PLATFORM_JS_DOM=PLATFORM_JS_DOM;exports.PLATFORM_NODE=PLATFORM_NODE;exports.PLATFORM_WEB_WORKER=PLATFORM_WEB_WORKER;exports.Pipe=Pipe;exports.Platform=Platform;exports.Serializer=Serializer;exports.SrcDirective=SrcDirective;exports.Structure=Structure;exports.StyleDirective=StyleDirective;exports.TransferService=TransferService;exports.WINDOW=WINDOW;exports.decodeBase64=_decodeBase;exports.decodeJson=_decodeJson;exports.encodeBase64=_encodeBase;exports.encodeJson=_encodeJson;exports.encodeJsonWithOptions=encodeJsonWithOptions;exports.errors$=errors$;exports.getContext=getContext;exports.getContextByNode=getContextByNode;exports.getHost=getHost;exports.getLocationComponents=getLocationComponents;exports.getParsableContextByElement=getParsableContextByElement;exports.isPlatformBrowser=isPlatformBrowser;exports.isPlatformServer=isPlatformServer;exports.isPlatformWorker=isPlatformWorker;exports.nextError$=nextError$;exports.optionsToKey=optionsToKey;Object.defineProperty(exports,'__esModule',{value:true});})));

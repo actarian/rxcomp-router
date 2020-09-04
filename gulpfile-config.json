@@ -1,8 +1,7 @@
 ﻿{
   "targets": {
     "browser": {
-      "compile": [
-        {
+      "compile": [{
           "input": "web/client/*.html",
           "output": "docs/",
           "minify": false
@@ -27,22 +26,19 @@
           "minify": true
         }
       ],
-      "bundle": [
-        {
-          "input": [
-            "node_modules/gsap/dist/EasePack.js",
-            "node_modules/gsap/dist/gsap.js",
-            "node_modules/rxjs/bundles/rxjs.umd.js",
-            "node_modules/rxcomp/dist/umd/rxcomp.js"
-          ],
-          "output": "docs/js/vendors.js",
-          "minify": true
-        }
-      ]
+      "bundle": [{
+        "input": [
+          "node_modules/gsap/dist/EasePack.js",
+          "node_modules/gsap/dist/gsap.js",
+          "node_modules/rxjs/bundles/rxjs.umd.js",
+          "node_modules/rxcomp/dist/umd/rxcomp.js"
+        ],
+        "output": "docs/js/vendors.js",
+        "minify": true
+      }]
     },
     "web": {
-      "compile": [
-        {
+      "compile": [{
           "input": "web/client/*.html",
           "output": "web/client/dist/development/browser/",
           "minify": false
@@ -67,51 +63,46 @@
           "minify": true
         }
       ],
-      "bundle": [
-        {
-          "input": [
-            "node_modules/gsap/dist/EasePack.js",
-            "node_modules/gsap/dist/gsap.js",
-            "node_modules/rxjs/bundles/rxjs.umd.js",
-            "node_modules/rxcomp/dist/umd/rxcomp.js"
-          ],
-          "output": "web/client/dist/development/browser/js/vendors.js",
-          "minify": true
-        }
-      ]
+      "bundle": [{
+        "input": [
+          "node_modules/gsap/dist/EasePack.js",
+          "node_modules/gsap/dist/gsap.js",
+          "node_modules/rxjs/bundles/rxjs.umd.js",
+          "node_modules/rxcomp/dist/umd/rxcomp.js"
+        ],
+        "output": "web/client/dist/development/browser/js/vendors.js",
+        "minify": true
+      }]
     },
     "dist": {
-      "compile": [
-        {
-          "input": "src/rxcomp-router.ts",
-          "output": [
-            {
-              "file": "dist/cjs/",
-              "format": "cjs"
-            },
-            {
-              "file": "dist/esm/",
-              "format": "esm"
-            },
-            {
-              "file": "dist/umd/rxcomp-router.js",
-              "format": "umd",
-              "minify": true
-            },
-            {
-              "file": "dist/iife/rxcomp-router.js",
-              "format": "iife",
-              "minify": true
-            }
-          ],
-          "globals": {
-            "rxjs": "rxjs",
-            "rxjs/operators": "rxjs.operators",
-            "rxcomp": "rxcomp"
+      "compile": [{
+        "input": "src/rxcomp-router.ts",
+        "output": [{
+            "file": "dist/cjs/",
+            "format": "cjs"
           },
-          "name": "rxcomp.router"
-        }
-      ]
+          {
+            "file": "dist/esm/",
+            "format": "esm"
+          },
+          {
+            "file": "dist/umd/rxcomp-router.js",
+            "format": "umd",
+            "minify": true
+          },
+          {
+            "file": "dist/iife/rxcomp-router.js",
+            "format": "iife",
+            "minify": true
+          }
+        ],
+        "globals": {
+          "rxjs": "rxjs",
+          "rxjs/operators": "rxjs.operators",
+          "rxcomp": "rxcomp"
+        },
+        "name": "rxcomp.router"
+      }]
     }
   },
   "server": {

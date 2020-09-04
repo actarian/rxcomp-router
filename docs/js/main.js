@@ -1,5 +1,5 @@
 /**
- * @license rxcomp-router v1.0.0-beta.14
+ * @license rxcomp-router v1.0.0-beta.16
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -1128,9 +1128,7 @@ function makeCanActivateResponse$_(events$, event) {
 
 function makeObserve$_(routes, route$, events$, locationStrategy) {
   var currentRoute;
-  var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.merge(rxjs.fromEvent(rxcomp.WINDOW, 'popstate')).pipe(operators.tap(function (event) {
-    console.log('RouterService.onPopState', "location: \"" + document.location.pathname + "\"", "state: \"" + event.state + "\"");
-  }), operators.map(function (event) {
+  var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.merge(rxjs.fromEvent(rxcomp.WINDOW, 'popstate')).pipe(operators.map(function (event) {
     return new NavigationStart({
       routerLink: document.location.pathname,
       trigger: 'popstate'
@@ -1495,7 +1493,7 @@ RouterLinkActiveDirective.meta = {
 
   _proto.onEnter$_ = function onEnter$_(element, instance) {
     if (element && instance && instance instanceof View) {
-      return asObservable_([element], instance.onEnter);
+      return asObservable([element], instance.onEnter);
     } else {
       return rxjs.of(true);
     }
@@ -1503,7 +1501,7 @@ RouterLinkActiveDirective.meta = {
 
   _proto.onExit$_ = function onExit$_(element, instance) {
     if (element && instance && instance instanceof View) {
-      return asObservable_([element], instance.onExit);
+      return asObservable([element], instance.onExit);
     } else {
       return rxjs.of(true);
     }
@@ -1524,8 +1522,7 @@ RouterOutletStructure.meta = {
     host: RouterOutletStructure
   }
 };
-
-function asObservable_(args, callback) {
+function asObservable(args, callback) {
   return rxjs.Observable.create(function (observer) {
     var subscription;
 
