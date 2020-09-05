@@ -120,14 +120,23 @@ function clearRoutes_(routes: Routes, currentSnapshot: RouteSnapshot): void {
 	});
 }
 function resolveRoutes_(routes: Routes, childRoutes: Routes, initialUrl: string): RouteSnapshot | undefined {
-	let resolvedRoute: RouteSnapshot | undefined;
-	for (let childRoute of childRoutes) {
-		const route: RouteSnapshot | undefined = resolveRoute_(routes, childRoute, initialUrl);
-		if (route && (!resolvedRoute || route.remainUrl!.length < resolvedRoute.remainUrl!.length)) {
-			resolvedRoute = route;
+	let resolvedSnapshot: RouteSnapshot | undefined;
+	for (let route of childRoutes) {
+		const snapshot: RouteSnapshot | undefined = resolveRoute_(routes, route, initialUrl);
+		if (snapshot) {
+			if (resolvedSnapshot) {
+				/*
+				if (snapshot.remainUrl.length < resolvedSnapshot.remainUrl.length) {
+					// console.log('RouterService.resolveRoutes_', snapshot.remainUrl.length, '<', resolvedSnapshot.remainUrl.length, snapshot.path, snapshot.remainUrl);
+				}
+				*/
+				resolvedSnapshot = snapshot.remainUrl.length < resolvedSnapshot.remainUrl.length ? snapshot : resolvedSnapshot;
+			} else {
+				resolvedSnapshot = snapshot;
+			}
 		}
 	}
-	return resolvedRoute;
+	return resolvedSnapshot;
 	// return childRoutes.reduce<RouteSnapshot | undefined>((p, route) => p || resolveRoute_(routes, route, initialUrl), undefined);
 }
 function resolveRoute_(routes: Routes, route: Route, initialUrl: string): RouteSnapshot | undefined {
@@ -136,32 +145,33 @@ function resolveRoute_(routes: Routes, route: Route, initialUrl: string): RouteS
 	let extractedUrl: string = '';
 	let remainUrl: string = initialUrl;
 	const match: RegExpMatchArray | null = initialUrl.match(route.matcher);
-	// console.log(route.matcher, match?.length, initialUrl, '=>', route.path);
+	// console.log('RouterService.resolveRoute_', route.matcher, match?.length, initialUrl, '=>', route.path);
 	if (!match) {
-		// console.log(initialUrl, '=>', route.path, initialUrl.match(route.matcher));
+		// console.log('RouterService.resolveRoute_', initialUrl, '=>', route.path);
 		return undefined;
 	}
 	if (route.redirectTo) {
-		// console.log('match', initialUrl, '=>', route.redirectTo, match);
+		// console.log('RouterService.resolveRoute_', 'match', initialUrl, '=>', route.redirectTo, match);
 		const routePath: RoutePath = RouterService.getPath(route.redirectTo);
 		return resolveRoutes_(routes, routes, routePath.url);
 	}/* else {
-        // console.log('match', initialUrl, match);
-    }*/
+		// console.log('RouterService.resolveRoute_', 'match', initialUrl, '=>', route.path, match);
+	}*/
 	extractedUrl = match[0];
 	remainUrl = initialUrl.substring(match[0].length, initialUrl.length);
 	const routePath: RoutePath = new RoutePath(extractedUrl, route.segments, undefined, RouterService.locationStrategy);
 	let params: RouterKeyValue = routePath.params;
 	const snapshot: RouteSnapshot = new RouteSnapshot({ ...route, initialUrl, urlAfterRedirects, extractedUrl, remainUrl, params });
 	route.snapshot = snapshot;
-	if (route.children?.length && remainUrl.length) {
-		const childRoute: RouteSnapshot | undefined = resolveRoutes_(routes, route.children, remainUrl);
-		snapshot.childRoute = childRoute;
-		if (childRoute) {
-			childRoute.parent = snapshot;
+	if (snapshot && snapshot.remainUrl.length && route.children?.length) {
+		const childSnapshot: RouteSnapshot | undefined = resolveRoutes_(routes, route.children, snapshot.remainUrl);
+		snapshot.childRoute = childSnapshot;
+		if (childSnapshot) {
+			childSnapshot.parent = snapshot;
+			snapshot.remainUrl = childSnapshot.remainUrl;
 		}
 	}
-	// console.log('RouteSnapshot', snapshot.path, snapshot.extractedUrl, snapshot.remainUrl);
+	// console.log('RouterService.resolveRoute_', snapshot.path, snapshot.extractedUrl, snapshot.remainUrl);
 	return snapshot;
 }
 function makeActivatorResponse$_(event: RouterEvent, activators: Observable<boolean | RouteComponent[]>[]): Observable<RouterEvent> {
@@ -298,7 +308,7 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 					// console.log('absolute');
 				}
 				if (snapshot) {
-					// console.log(routes);
+					// console.log('RouterService.makeObserve$_', 'NavigationStart', snapshot);
 					currentRoute = snapshot;
 					events$.next(new RoutesRecognized({ ...event, route: snapshot }));
 				} else {
@@ -355,13 +365,13 @@ function makeObserve$_(routes: Routes, route$: ReplaySubject<RouteSnapshot>, eve
 					}
 				}
 				const extractedUrl: string = segments.join('/').replace(/\/\//g, '/');
-				console.log('NavigationEnd', event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
+				// console.log('NavigationEnd', event.route.extractedUrl, event.route);
 				clearRoutes_(routes, event.route);
 				locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
 				// setHistory_(locationStrategy, extractedUrl, undefined, event.trigger === 'popstate');
 				route$.next(event.route);
 			} else if (event instanceof NavigationCancel) {
-				console.log('NavigationCancel', event.reason, event.redirectTo);
+				// console.log('NavigationCancel', event.reason, event.redirectTo);
 				if (event.redirectTo) {
 					// const routePath: RoutePath = RouterService.getPath(event.redirectTo);
 					events$.next(new NavigationStart({ routerLink: event.redirectTo, trigger: 'imperative' }));

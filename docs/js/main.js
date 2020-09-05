@@ -1,5 +1,5 @@
 /**
- * @license rxcomp-router v1.0.0-beta.16
+ * @license rxcomp-router v1.0.0-beta.17
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -990,18 +990,22 @@ function clearRoutes_(routes, currentSnapshot) {
 }
 
 function resolveRoutes_(routes, childRoutes, initialUrl) {
-  var resolvedRoute;
+  var resolvedSnapshot;
 
   for (var _iterator2 = _createForOfIteratorHelperLoose(childRoutes), _step2; !(_step2 = _iterator2()).done;) {
-    var childRoute = _step2.value;
-    var route = resolveRoute_(routes, childRoute, initialUrl);
+    var route = _step2.value;
+    var snapshot = resolveRoute_(routes, route, initialUrl);
 
-    if (route && (!resolvedRoute || route.remainUrl.length < resolvedRoute.remainUrl.length)) {
-      resolvedRoute = route;
+    if (snapshot) {
+      if (resolvedSnapshot) {
+        resolvedSnapshot = snapshot.remainUrl.length < resolvedSnapshot.remainUrl.length ? snapshot : resolvedSnapshot;
+      } else {
+        resolvedSnapshot = snapshot;
+      }
     }
   }
 
-  return resolvedRoute;
+  return resolvedSnapshot;
 }
 
 function resolveRoute_(routes, route, initialUrl) {
@@ -1035,12 +1039,13 @@ function resolveRoute_(routes, route, initialUrl) {
   }));
   route.snapshot = snapshot;
 
-  if (((_route$children = route.children) == null ? void 0 : _route$children.length) && remainUrl.length) {
-    var childRoute = resolveRoutes_(routes, route.children, remainUrl);
-    snapshot.childRoute = childRoute;
+  if (snapshot && snapshot.remainUrl.length && ((_route$children = route.children) == null ? void 0 : _route$children.length)) {
+    var childSnapshot = resolveRoutes_(routes, route.children, snapshot.remainUrl);
+    snapshot.childRoute = childSnapshot;
 
-    if (childRoute) {
-      childRoute.parent = snapshot;
+    if (childSnapshot) {
+      childSnapshot.parent = snapshot;
+      snapshot.remainUrl = childSnapshot.remainUrl;
     }
   }
 
@@ -1234,13 +1239,10 @@ function makeObserve$_(routes, route$, events$, locationStrategy) {
       }
 
       var extractedUrl = segments.join('/').replace(/\/\//g, '/');
-      console.log('NavigationEnd', event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
       clearRoutes_(routes, event.route);
       locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
       route$.next(event.route);
     } else if (event instanceof NavigationCancel) {
-      console.log('NavigationCancel', event.reason, event.redirectTo);
-
       if (event.redirectTo) {
         events$.next(new NavigationStart({
           routerLink: event.redirectTo,

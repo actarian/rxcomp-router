@@ -17,7 +17,7 @@ export class RouteSnapshot implements IBaseRoute {
 	initialUrl?: string;
 	urlAfterRedirects?: string;
 	extractedUrl?: string;
-	remainUrl?: string;
+	remainUrl!: string;
 	data!: RouterKeyValue;
 	params!: RouterKeyValue;
 	queryParams!: RouterKeyValue;

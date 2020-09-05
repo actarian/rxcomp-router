@@ -5,11 +5,11 @@ const serveStatic = require('serve-static');
 const path = require('path');
 const { useApi } = require('./api/api.js');
 const { Server } = require('../../dist/cjs/rxcomp-router');
-const { renderRequest$ } = require('../client/dist/development/server/main.js');
+const { renderRequest$ } = require('../__dist/development/server/main.js');
 // const router = express.Router();
 
 const PORT = process.env.PORT || 5000;
-const ROOT = `../client/dist/development/browser/`;
+const ROOT = `../__dist/development/browser/`;
 
 const Vars = {
   port: PORT,

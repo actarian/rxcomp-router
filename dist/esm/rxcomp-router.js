@@ -1,0 +1,13 @@
+export { default as View } from './core/view';
+export { LocationStrategy, LocationStrategyHash, LocationStrategyPath } from './location/location.strategy';
+export { Route } from './route/route';
+export { RoutePath } from './route/route-path';
+export { RouteSegment } from './route/route-segment';
+export { RouteSnapshot } from './route/route-snapshot';
+export { default as RouterModule } from './router.module';
+export { RouteLocationStrategy } from './router.types';
+export { ActivationEnd, ActivationStart, ChildActivationEnd, ChildActivationStart, GuardsCheckEnd, GuardsCheckStart, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, ResolveEnd, ResolveStart, RouteConfigLoadEnd, RouteConfigLoadStart, RouterEvent, RoutesRecognized } from './router/router-events';
+export { default as RouterLinkActiveDirective } from './router/router-link-active.directive';
+export { default as RouterLinkDirective } from './router/router-link.directive';
+export { asObservable, default as RouterOutletStructure } from './router/router-outlet.structure';
+export { transition$ } from './transition/transition';
