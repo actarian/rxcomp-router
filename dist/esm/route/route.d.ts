@@ -24,13 +24,13 @@ export interface IBaseRoute {
     pathMatch?: 'prefix' | 'full';
     component?: typeof Component;
     matcher?: RegExp;
-    redirectTo?: string;
     outlet?: string;
     children?: IRoutes | Routes;
     initialUrl?: string;
     urlAfterRedirects?: string;
     extractedUrl?: string;
     remainUrl?: string;
+    redirectTo?: string;
     data?: Data;
     params?: RouterKeyValue;
     queryParams?: RouterKeyValue;

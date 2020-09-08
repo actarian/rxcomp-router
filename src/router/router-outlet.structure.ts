@@ -1,9 +1,10 @@
 import { Component, Factory, getContext, IComment, IElement, IFactoryMeta, Structure } from 'rxcomp';
-import { isObservable, Observable, Observer, of, ReplaySubject, Subscription } from 'rxjs';
+import { Observable, of, ReplaySubject } from 'rxjs';
 import { filter, switchMap, takeUntil, tap } from 'rxjs/operators';
-import View from '../core/view';
-import { isPromise } from '../route/route-activators';
+import View, { EnterTransition, LeaveTransition, OnceTransition, Transition } from '../core/view';
+import { asObservable } from '../observable/observable';
 import { RouteSnapshot } from '../route/route-snapshot';
+import { transitionOnce, transitionOnced } from '../transition/transition';
 import RouterService from './router.service';
 
 export default class RouterOutletStructure extends Structure {
@@ -53,7 +54,7 @@ export default class RouterOutletStructure extends Structure {
 		const factory: typeof Component | undefined = snapshot?.component;
 		if (this.factory_ !== factory) {
 			this.factory_ = factory;
-			return this.onExit$_(this.element, this.instance).pipe(
+			return this.onLeave$_(snapshot, this.element, this.instance).pipe(
 				tap(() => {
 					if (this.element) {
 						this.element.parentNode!.removeChild(this.element);
@@ -62,7 +63,7 @@ export default class RouterOutletStructure extends Structure {
 						this.instance = undefined;
 					}
 				}),
-				switchMap(() => {
+				switchMap((leaved: boolean) => {
 					if (snapshot && factory && factory.meta.template) {
 						let element: IElement = document.createElement('div');
 						element.innerHTML = factory.meta.template;
@@ -75,7 +76,11 @@ export default class RouterOutletStructure extends Structure {
 						this.instance = instance;
 						this.element = element;
 						snapshot.element = element;
-						return this.onEnter$_(element, instance);
+						return this.onOnce$_(snapshot, element, instance).pipe(
+							switchMap((onced: boolean) => {
+								return this.onEnter$_(snapshot, element, instance);
+							})
+						);
 					} else {
 						return of(false);
 					}
@@ -85,16 +90,46 @@ export default class RouterOutletStructure extends Structure {
 			return of(false);
 		}
 	}
-	private onEnter$_(element?: IElement, instance?: Component): Observable<boolean> {
-		if (element && instance && instance instanceof View) {
+	/*
+	private onEnter$__(element?: IElement, instance?: Component): Observable<boolean> {
+		if (instance instanceof View && element) {
 			return asObservable([element], instance.onEnter);
 		} else {
 			return of(true);
 		}
 	}
-	private onExit$_(element?: IElement, instance?: Component): Observable<boolean> {
-		if (element && instance && instance instanceof View) {
-			return asObservable([element], instance.onExit);
+	private onLeave$__(element?: IElement, instance?: Component): Observable<boolean> {
+		if (instance instanceof View && element) {
+			return asObservable([element], instance.onLeave);
+		} else {
+			return of(true);
+		}
+	}
+	*/
+	private onOnce$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+		if (!transitionOnced() && instance instanceof View && element) {
+			transitionOnce();
+			const factory = instance.constructor as unknown as View;
+			const transition: OnceTransition = factory.transitions.find((x: Transition) => x instanceof OnceTransition && x.matcher(snapshot.previousRoute?.path));
+			return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : of(true);
+		} else {
+			return of(true);
+		}
+	}
+	private onEnter$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+		if (instance instanceof View && element) {
+			const factory = instance.constructor as unknown as View;
+			const transition: EnterTransition = factory.transitions.find((x: Transition) => x instanceof EnterTransition && x.matcher(snapshot.previousRoute?.path));
+			return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : of(true);
+		} else {
+			return of(true);
+		}
+	}
+	private onLeave$_(snapshot?: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+		if (instance instanceof View && element) {
+			const factory = instance.constructor as unknown as View;
+			const transition: LeaveTransition = factory.transitions.find((x: Transition) => x instanceof LeaveTransition && x.matcher(snapshot?.path));
+			return transition ? asObservable([element, snapshot], transition.callback) : of(true);
 		} else {
 			return of(true);
 		}
@@ -103,36 +138,4 @@ export default class RouterOutletStructure extends Structure {
 		selector: 'router-outlet,[router-outlet]',
 		hosts: { host: RouterOutletStructure },
 	};
-}
-export function asObservable<T>(args: any[], callback: (...args: any[]) => Observable<T> | Promise<T> | (() => T) | T): Observable<T> {
-	return Observable.create(function (observer: Observer<T>) {
-		let subscription: Subscription;
-		try {
-			let result: Observable<T> | Promise<T> | (() => T) | T = callback(...args);
-			if (isObservable(result)) {
-				subscription = result.subscribe(result => {
-					observer.next(result);
-					observer.complete();
-				});
-			} else if (isPromise<T>(result)) {
-				(result as Promise<T>).then(result => {
-					observer.next(result);
-					observer.complete();
-				});
-			} else if (typeof result === 'function') {
-				observer.next((result as (() => T))() as T);
-				observer.complete();
-			} else {
-				observer.next(result);
-				observer.complete();
-			}
-		} catch (error) {
-			observer.error(error);
-		}
-		return () => {
-			if (subscription) {
-				subscription.unsubscribe();
-			}
-		}
-	});
 }

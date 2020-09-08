@@ -1,6 +1,8 @@
+import { Routes } from '../route/route';
 import { IRoutePath } from '../route/route-path';
+import { RouteSegment } from '../route/route-segment';
+import { RouteSnapshot } from '../route/route-snapshot';
 import { RouterLink } from '../router.types';
-import { RouteSegment } from '../rxcomp-router';
 export interface ILocationStrategy {
     serializeLink(routerLink: RouterLink): string;
     serializeUrl(url: string): string;
@@ -17,7 +19,12 @@ export interface ILocationStrategy {
     decodeString(s: string): string;
     getPath(url: string): string;
     getUrl(url: string, params?: URLSearchParams): string;
-    setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
+    pushState(url: string, snapshot: RouteSnapshot, popped?: boolean): void;
+    historyRequired(): boolean;
+    snapshotToState(snapshot: RouteSnapshot, pool: RouteSnapshot[]): {
+        [key: string]: any;
+    } | string | undefined;
+    stateToSnapshot(routes: Routes, state?: any): RouteSnapshot | undefined;
 }
 export declare class LocationStrategy implements ILocationStrategy {
     serializeLink(routerLink: RouterLink): string;
@@ -35,13 +42,15 @@ export declare class LocationStrategy implements ILocationStrategy {
     decodeString(value: string): string;
     getPath(url: string): string;
     getUrl(url: string, params?: URLSearchParams): string;
-    setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
+    pushState(url: string, snapshot: RouteSnapshot, popped?: boolean): void;
+    snapshotToState(snapshot?: RouteSnapshot, pool?: RouteSnapshot[]): {
+        [key: string]: any;
+    } | string | undefined;
+    stateToSnapshot(routes: Routes, state?: any, pool?: RouteSnapshot[]): RouteSnapshot | undefined;
+    historyRequired(): boolean;
+    static historySupported(): boolean;
 }
-export declare function encodeParam(value: string): string;
-export declare function decodeParam(value: string): string;
 export declare class LocationStrategyPath extends LocationStrategy implements ILocationStrategy {
-    serialize(routePath: IRoutePath): string;
-    resolve(url: string, target?: IRoutePath): IRoutePath;
 }
 export declare class LocationStrategyHash extends LocationStrategy implements ILocationStrategy {
     serializeLink(routerLink: RouterLink): string;
@@ -50,4 +59,7 @@ export declare class LocationStrategyHash extends LocationStrategy implements IL
     resolve(url: string, target?: IRoutePath): IRoutePath;
     getPath(url: string): string;
     getUrl(url: string, params?: URLSearchParams): string;
+    historyRequired(): boolean;
 }
+export declare function encodeParam(value: string): string;
+export declare function decodeParam(value: string): string;

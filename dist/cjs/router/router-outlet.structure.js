@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asObservable = void 0;
 var tslib_1 = require("tslib");
 var rxcomp_1 = require("rxcomp");
 var rxjs_1 = require("rxjs");
 var operators_1 = require("rxjs/operators");
-var view_1 = tslib_1.__importDefault(require("../core/view"));
-var route_activators_1 = require("../route/route-activators");
+var view_1 = tslib_1.__importStar(require("../core/view"));
+var observable_1 = require("../observable/observable");
+var transition_1 = require("../transition/transition");
 var router_service_1 = tslib_1.__importDefault(require("./router.service"));
 var RouterOutletStructure = /** @class */ (function (_super) {
     tslib_1.__extends(RouterOutletStructure, _super);
@@ -59,27 +59,29 @@ var RouterOutletStructure = /** @class */ (function (_super) {
         var factory = snapshot === null || snapshot === void 0 ? void 0 : snapshot.component;
         if (this.factory_ !== factory) {
             this.factory_ = factory;
-            return this.onExit$_(this.element, this.instance).pipe(operators_1.tap(function () {
+            return this.onLeave$_(snapshot, this.element, this.instance).pipe(operators_1.tap(function () {
                 if (_this.element) {
                     _this.element.parentNode.removeChild(_this.element);
                     module.remove(_this.element, _this);
                     _this.element = undefined;
                     _this.instance = undefined;
                 }
-            }), operators_1.switchMap(function () {
+            }), operators_1.switchMap(function (leaved) {
                 if (snapshot && factory && factory.meta.template) {
-                    var element = document.createElement('div');
-                    element.innerHTML = factory.meta.template;
-                    if (element.children.length === 1) {
-                        element = element.firstElementChild;
+                    var element_1 = document.createElement('div');
+                    element_1.innerHTML = factory.meta.template;
+                    if (element_1.children.length === 1) {
+                        element_1 = element_1.firstElementChild;
                     }
-                    node.appendChild(element);
-                    var instance = module.makeInstance(element, factory, factory.meta.selector, _this, undefined, { route: snapshot });
-                    module.compile(element, instance);
-                    _this.instance = instance;
-                    _this.element = element;
-                    snapshot.element = element;
-                    return _this.onEnter$_(element, instance);
+                    node.appendChild(element_1);
+                    var instance_1 = module.makeInstance(element_1, factory, factory.meta.selector, _this, undefined, { route: snapshot });
+                    module.compile(element_1, instance_1);
+                    _this.instance = instance_1;
+                    _this.element = element_1;
+                    snapshot.element = element_1;
+                    return _this.onOnce$_(snapshot, element_1, instance_1).pipe(operators_1.switchMap(function (onced) {
+                        return _this.onEnter$_(snapshot, element_1, instance_1);
+                    }));
                 }
                 else {
                     return rxjs_1.of(false);
@@ -90,17 +92,48 @@ var RouterOutletStructure = /** @class */ (function (_super) {
             return rxjs_1.of(false);
         }
     };
-    RouterOutletStructure.prototype.onEnter$_ = function (element, instance) {
-        if (element && instance && instance instanceof view_1.default) {
+    /*
+    private onEnter$__(element?: IElement, instance?: Component): Observable<boolean> {
+        if (instance instanceof View && element) {
             return asObservable([element], instance.onEnter);
+        } else {
+            return of(true);
+        }
+    }
+    private onLeave$__(element?: IElement, instance?: Component): Observable<boolean> {
+        if (instance instanceof View && element) {
+            return asObservable([element], instance.onLeave);
+        } else {
+            return of(true);
+        }
+    }
+    */
+    RouterOutletStructure.prototype.onOnce$_ = function (snapshot, element, instance) {
+        if (!transition_1.transitionOnced() && instance instanceof view_1.default && element) {
+            transition_1.transitionOnce();
+            var factory = instance.constructor;
+            var transition = factory.transitions.find(function (x) { var _a; return x instanceof view_1.OnceTransition && x.matcher((_a = snapshot.previousRoute) === null || _a === void 0 ? void 0 : _a.path); });
+            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback) : rxjs_1.of(true);
         }
         else {
             return rxjs_1.of(true);
         }
     };
-    RouterOutletStructure.prototype.onExit$_ = function (element, instance) {
-        if (element && instance && instance instanceof view_1.default) {
-            return asObservable([element], instance.onExit);
+    RouterOutletStructure.prototype.onEnter$_ = function (snapshot, element, instance) {
+        if (instance instanceof view_1.default && element) {
+            var factory = instance.constructor;
+            var transition = factory.transitions.find(function (x) { var _a; return x instanceof view_1.EnterTransition && x.matcher((_a = snapshot.previousRoute) === null || _a === void 0 ? void 0 : _a.path); });
+            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback) : rxjs_1.of(true);
+        }
+        else {
+            return rxjs_1.of(true);
+        }
+    };
+    RouterOutletStructure.prototype.onLeave$_ = function (snapshot, element, instance) {
+        if (instance instanceof view_1.default && element) {
+            var factory = instance.constructor;
+            var transition = factory.transitions.find(function (x) { return x instanceof view_1.LeaveTransition && x.matcher(snapshot === null || snapshot === void 0 ? void 0 : snapshot.path); });
+            return transition ? observable_1.asObservable([element, snapshot], transition.callback) : rxjs_1.of(true);
         }
         else {
             return rxjs_1.of(true);
@@ -113,40 +146,3 @@ var RouterOutletStructure = /** @class */ (function (_super) {
     return RouterOutletStructure;
 }(rxcomp_1.Structure));
 exports.default = RouterOutletStructure;
-function asObservable(args, callback) {
-    return rxjs_1.Observable.create(function (observer) {
-        var subscription;
-        try {
-            var result = callback.apply(void 0, tslib_1.__spread(args));
-            if (rxjs_1.isObservable(result)) {
-                subscription = result.subscribe(function (result) {
-                    observer.next(result);
-                    observer.complete();
-                });
-            }
-            else if (route_activators_1.isPromise(result)) {
-                result.then(function (result) {
-                    observer.next(result);
-                    observer.complete();
-                });
-            }
-            else if (typeof result === 'function') {
-                observer.next(result());
-                observer.complete();
-            }
-            else {
-                observer.next(result);
-                observer.complete();
-            }
-        }
-        catch (error) {
-            observer.error(error);
-        }
-        return function () {
-            if (subscription) {
-                subscription.unsubscribe();
-            }
-        };
-    });
-}
-exports.asObservable = asObservable;

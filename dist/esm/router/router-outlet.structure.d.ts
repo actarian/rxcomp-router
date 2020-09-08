@@ -14,8 +14,8 @@ export default class RouterOutletStructure extends Structure {
     onChanges(): void;
     route$(): Observable<RouteSnapshot | undefined>;
     factory$(snapshot: RouteSnapshot | undefined): Observable<boolean>;
+    private onOnce$_;
     private onEnter$_;
-    private onExit$_;
+    private onLeave$_;
     static meta: IFactoryMeta;
 }
-export declare function asObservable<T>(args: any[], callback: (...args: any[]) => Observable<T> | Promise<T> | (() => T) | T): Observable<T>;

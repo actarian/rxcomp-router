@@ -3,7 +3,6 @@ import { takeUntil } from 'rxjs/operators';
 
 export default class AppComponent extends Component {
 	error: any = null;
-
 	onInit() {
 		// console.log('AppComponent.onInit', this);
 		const { node } = getContext(this);
@@ -15,7 +14,6 @@ export default class AppComponent extends Component {
 			this.pushChanges();
 		});
 	}
-
 	static meta: IFactoryMeta = {
 		selector: '[app-component]',
 	};

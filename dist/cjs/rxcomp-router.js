@@ -2,10 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var view_1 = require("./core/view");
 Object.defineProperty(exports, "View", { enumerable: true, get: function () { return view_1.default; } });
+Object.defineProperty(exports, "EnterTransition", { enumerable: true, get: function () { return view_1.EnterTransition; } });
+Object.defineProperty(exports, "LeaveTransition", { enumerable: true, get: function () { return view_1.LeaveTransition; } });
+Object.defineProperty(exports, "Transition", { enumerable: true, get: function () { return view_1.Transition; } });
 var location_strategy_1 = require("./location/location.strategy");
 Object.defineProperty(exports, "LocationStrategy", { enumerable: true, get: function () { return location_strategy_1.LocationStrategy; } });
 Object.defineProperty(exports, "LocationStrategyHash", { enumerable: true, get: function () { return location_strategy_1.LocationStrategyHash; } });
 Object.defineProperty(exports, "LocationStrategyPath", { enumerable: true, get: function () { return location_strategy_1.LocationStrategyPath; } });
+var observable_1 = require("./observable/observable");
+Object.defineProperty(exports, "asObservable", { enumerable: true, get: function () { return observable_1.asObservable; } });
+Object.defineProperty(exports, "isPromise", { enumerable: true, get: function () { return observable_1.isPromise; } });
 var route_1 = require("./route/route");
 Object.defineProperty(exports, "Route", { enumerable: true, get: function () { return route_1.Route; } });
 var route_path_1 = require("./route/route-path");
@@ -40,7 +46,8 @@ Object.defineProperty(exports, "RouterLinkActiveDirective", { enumerable: true, 
 var router_link_directive_1 = require("./router/router-link.directive");
 Object.defineProperty(exports, "RouterLinkDirective", { enumerable: true, get: function () { return router_link_directive_1.default; } });
 var router_outlet_structure_1 = require("./router/router-outlet.structure");
-Object.defineProperty(exports, "asObservable", { enumerable: true, get: function () { return router_outlet_structure_1.asObservable; } });
 Object.defineProperty(exports, "RouterOutletStructure", { enumerable: true, get: function () { return router_outlet_structure_1.default; } });
 var transition_1 = require("./transition/transition");
 Object.defineProperty(exports, "transition$", { enumerable: true, get: function () { return transition_1.transition$; } });
+Object.defineProperty(exports, "transitionOnce", { enumerable: true, get: function () { return transition_1.transitionOnce; } });
+Object.defineProperty(exports, "transitionOnced", { enumerable: true, get: function () { return transition_1.transitionOnced; } });

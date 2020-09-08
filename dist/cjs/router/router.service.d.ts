@@ -12,6 +12,7 @@ export default class RouterService {
     static observe$: Observable<RouterEvent>;
     static get flatRoutes(): Routes;
     static setRoutes(routes: IRoutes): RouterService;
+    static makeObserve$(): Observable<RouterEvent>;
     static setRouterLink(routerLink: RouterLink, extras?: INavigationExtras): void;
     static navigate(routerLink: RouterLink, extras?: INavigationExtras): void;
     static findRoute(routerLink: RouterLink): Route | null;
@@ -19,5 +20,5 @@ export default class RouterService {
     static getPath(routerLink?: RouterLink): RoutePath;
     private static locationStrategy_;
     static get locationStrategy(): ILocationStrategy;
-    static useLocationStrategy(locationStrategyType: typeof LocationStrategy): void;
+    static useLocationStrategy(locationStrategyFactory: typeof LocationStrategy): void;
 }

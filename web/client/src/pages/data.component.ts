@@ -11,7 +11,8 @@ export default class DataComponent extends Component {
 			combineLatest(route.data$, route.params$).pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe((datas: RouterKeyValue[]) => {
-				this.title = datas[0].title;
+				const title = this.title = datas[0].title as string;
+				document.title = title;
 				this.params = datas[1];
 				// this.pushChanges(); // !!not needed;
 				// console.log('DataComponent', datas);

@@ -19,5 +19,4 @@ export class CustomActivator implements ICanActivate, ICanDeactivate<Component>,
 		return childRoute.path === 'media' ? ['files'] : true;
 	}
 }
-
 export const customActivator: CustomActivator = new CustomActivator();

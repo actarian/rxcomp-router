@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transition$ = void 0;
+exports.transitionOnced = exports.transitionOnce = exports.transition$ = void 0;
 var rxcomp_1 = require("rxcomp");
 var rxjs_1 = require("rxjs");
+// !!! change boolean to void
 function transition$(callback) {
     return rxjs_1.Observable.create(function (observer) {
         // let subscription: Subscription;
@@ -31,3 +32,33 @@ function transition$(callback) {
     });
 }
 exports.transition$ = transition$;
+// !!! should make transition specific?
+function transitionOnce() {
+    sessionStorageSet_('rxcomp_transition_once_', true);
+}
+exports.transitionOnce = transitionOnce;
+function transitionOnced() {
+    return sessionStorageGet_('rxcomp_transition_once_');
+}
+exports.transitionOnced = transitionOnced;
+var MEMORY = {};
+function sessionStorageGet_(key) {
+    var value;
+    try {
+        var storage = rxcomp_1.WINDOW.sessionStorage;
+        value = storage.getItem(key) || null;
+    }
+    catch (error) {
+        value = MEMORY[key];
+    }
+    return value;
+}
+function sessionStorageSet_(key, value) {
+    try {
+        var storage = rxcomp_1.WINDOW.sessionStorage;
+        storage.setItem(key, value);
+    }
+    catch (error) {
+        MEMORY[key] = value;
+    }
+}

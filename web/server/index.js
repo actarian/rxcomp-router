@@ -5,11 +5,11 @@ const serveStatic = require('serve-static');
 const path = require('path');
 const { useApi } = require('./api/api.js');
 const { Server } = require('../../dist/cjs/rxcomp-router');
-const { renderRequest$ } = require('../__dist/development/server/main.js');
+const { renderRequest$ } = require('../dist/development/server/main.js');
 // const router = express.Router();
 
 const PORT = process.env.PORT || 5000;
-const ROOT = `../__dist/development/browser/`;
+const ROOT = `../dist/development/browser/`;
 
 const Vars = {
   port: PORT,
@@ -17,7 +17,7 @@ const Vars = {
   charset: 'utf8',
   root: ROOT,
   cacheMode: 'file',
-  cache: path.join(__dirname, `../__cache/`),
+  cache: path.join(__dirname, `../cache/`),
   template: path.join(__dirname, `${ROOT}index.html`),
 };
 

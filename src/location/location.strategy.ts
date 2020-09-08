@@ -1,7 +1,9 @@
 import { decodeBase64, decodeJson, encodeBase64, encodeJson, isPlatformBrowser, Serializer } from 'rxcomp';
+import { Routes } from '../route/route';
 import { IRoutePath } from '../route/route-path';
+import { RouteSegment } from '../route/route-segment';
+import { RouteSnapshot } from '../route/route-snapshot';
 import { RouterKeyValue, RouterLink } from '../router.types';
-import { RouteSegment } from '../rxcomp-router';
 
 export interface ILocationStrategy {
 	serializeLink(routerLink: RouterLink): string;
@@ -17,7 +19,10 @@ export interface ILocationStrategy {
 	decodeString(s: string): string;
 	getPath(url: string): string;
 	getUrl(url: string, params?: URLSearchParams): string;
-	setHistory(url: string, params?: URLSearchParams, popped?: boolean): void;
+	pushState(url: string, snapshot: RouteSnapshot, popped?: boolean): void;
+	historyRequired(): boolean;
+	snapshotToState(snapshot: RouteSnapshot, pool: RouteSnapshot[]): { [key: string]: any } | string | undefined;
+	stateToSnapshot(routes: Routes, state?: any): RouteSnapshot | undefined;
 }
 export class LocationStrategy implements ILocationStrategy {
 	serializeLink(routerLink: RouterLink): string {
@@ -125,28 +130,91 @@ export class LocationStrategy implements ILocationStrategy {
 	getUrl(url: string, params?: URLSearchParams): string {
 		return `${url}${params ? '?' + params.toString() : ''}`;
 	}
-	setHistory(url: string, params?: URLSearchParams, popped?: boolean): void {
-		if (isPlatformBrowser && typeof history !== 'undefined' && history.pushState) {
-			const title = document.title;
-			url = this.getUrl(url, params);
+	pushState(url: string, snapshot: RouteSnapshot, popped?: boolean): void {
+		if (LocationStrategy.historySupported()) {
+			// url = this.getUrl(url, params);
 			// !!!
 			// const state = params ? params.toString() : '';
 			// console.log(state);
-			if (popped) {
-				history.replaceState(undefined, title, url);
-			} else {
-				history.pushState(undefined, title, url);
+			// if (popped) {
+			// history.replaceState(undefined, title, url);
+			// } else {
+			if (!popped) {
+				try {
+					const state = this.snapshotToState(snapshot);
+					console.log('LocationStrategy.snapshotToState state', state);
+					// console.log(state);
+					const title = document.title; // you can pass null as string cause title is a DOMString!
+					history.pushState(state, title, url);
+				} catch (error) {
+					console.log('LocationStrategy.pushState.error', error);
+				}
 			}
+		} else if (this.historyRequired()) {
+			throw new Error('LocationStrategyError: history not supported!');
+		} else {
+			location.hash = url;
 		}
 	}
-}
-export function encodeParam(value: string): string {
-	return `;${value}`;
-}
-export function decodeParam(value: string): string {
-	return value.substring(1, value.length);
+	snapshotToState(snapshot?: RouteSnapshot, pool: RouteSnapshot[] = []): { [key: string]: any } | string | undefined {
+		let state: { [key: string]: any } | string | undefined = undefined;
+		if (snapshot) {
+			if (pool.indexOf(snapshot) !== -1) {
+				state = snapshot.path;
+			} else {
+				pool.push(snapshot);
+				state = {};
+				state.path = snapshot.path;
+				state.initialUrl = snapshot.initialUrl;
+				state.urlAfterRedirects = snapshot.urlAfterRedirects;
+				state.extractedUrl = snapshot.extractedUrl;
+				state.remainUrl = snapshot.remainUrl;
+				state.childRoute = this.snapshotToState(snapshot.childRoute, pool);
+				state.previousRoute = this.snapshotToState(snapshot.previousRoute, pool);
+				state.data = snapshot.data;
+				state.params = snapshot.params;
+				state.queryParams = snapshot.queryParams;
+			}
+		}
+		return state;
+	}
+	stateToSnapshot(routes: Routes, state?: any, pool: RouteSnapshot[] = []): RouteSnapshot | undefined {
+		let snapshot: RouteSnapshot | undefined;
+		if (state) {
+			const route = routes.find(r => r.path = state.path);
+			if (route) {
+				if (typeof state === 'string') {
+					snapshot = pool.find(x => x.path === state);
+				} else {
+					snapshot = new RouteSnapshot({
+						...route,
+						initialUrl: state.initialUrl,
+						urlAfterRedirects: state.urlAfterRedirects,
+						extractedUrl: state.extractedUrl,
+						remainUrl: state.remainUrl,
+						redirectTo: '',
+						data: state.data,
+						params: state.params,
+						queryParams: state.queryParams,
+					});
+					pool.push(snapshot);
+					snapshot.childRoute = this.stateToSnapshot(routes, state.childRoute, pool);
+					snapshot.previousRoute = this.stateToSnapshot(routes, state.previousRoute, pool);
+				}
+				route.snapshot = snapshot;
+			}
+		}
+		return snapshot;
+	}
+	historyRequired(): boolean {
+		return true;
+	}
+	static historySupported(): boolean {
+		return isPlatformBrowser && typeof history !== 'undefined' && typeof history.pushState === 'function';
+	}
 }
 export class LocationStrategyPath extends LocationStrategy implements ILocationStrategy {
+	/*
 	serialize(routePath: IRoutePath): string {
 		return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
 	}
@@ -191,6 +259,7 @@ export class LocationStrategyPath extends LocationStrategy implements ILocationS
 		// console.log('resolvePath_', url, prefix, path, query, search, hash, segments, params);
 		return target;
 	}
+	*/
 }
 export class LocationStrategyHash extends LocationStrategy implements ILocationStrategy {
 	serializeLink(routerLink: RouterLink): string {
@@ -256,4 +325,13 @@ export class LocationStrategyHash extends LocationStrategy implements ILocationS
 	getUrl(url: string, params?: URLSearchParams): string {
 		return `${params ? '?' + params.toString() : ''}${this.getPath(url)}`;
 	}
+	historyRequired(): boolean {
+		return false;
+	}
+}
+export function encodeParam(value: string): string {
+	return `;${value}`;
+}
+export function decodeParam(value: string): string {
+	return value.substring(1, value.length);
 }

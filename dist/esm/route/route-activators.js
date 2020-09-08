@@ -1,4 +1,5 @@
 import { isObservable, Observable } from 'rxjs';
+import { isPromise } from '../observable/observable';
 export function mapCanDeactivate$_(activator) {
     return function canDeactivate$(component, currentRoute) {
         return makeObserver$_(() => activator.canDeactivate(component, currentRoute));
@@ -18,9 +19,6 @@ export function mapCanActivateChild$_(activator) {
     return function canActivateChild$(childRoute) {
         return makeObserver$_(() => activator.canActivateChild(childRoute));
     };
-}
-export function isPromise(object) {
-    return object instanceof Promise || (typeof object === 'object' && 'then' in object && typeof object['then'] === 'function');
 }
 function makeObserver$_(callback) {
     return Observable.create(function (observer) {

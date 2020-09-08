@@ -97,7 +97,6 @@ export class NavigationCancel extends RouterEvent {
 export class NavigationError extends RouterEvent {
 	error!: any;
 }
-
 /*
 NavigationStart {id: 1, url: '/test-a', navigationTrigger: 'imperative', restoredState: null, constructor: Object}
 RoutesRecognized {id: 1, url: '/test-a', urlAfterRedirects: '/test-a', state: RouterStateSnapshot, constructor: Object}

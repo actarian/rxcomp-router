@@ -1,6 +1,6 @@
 import { Directive, getContext } from 'rxcomp';
 import { fromEvent } from 'rxjs';
-import { shareReplay, takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 import { RouteSegment } from '../route/route-segment';
 import RouterService from './router.service';
 export default class RouterLinkDirective extends Directive {
@@ -39,9 +39,13 @@ export default class RouterLinkDirective extends Directive {
         return segments;
     }
     onInit() {
+        // const { node, module } = getContext(this);
+        // console.log('RouterLinkDirective.onInit', this.routerLink, node, module);
+        this.routerLink$().pipe(takeUntil(this.unsubscribe$)).subscribe();
+    }
+    routerLink$() {
         const { node } = getContext(this);
-        const event$ = fromEvent(node, 'click').pipe(shareReplay(1));
-        event$.pipe(takeUntil(this.unsubscribe$)).subscribe(event => {
+        return fromEvent(node, 'click').pipe(map((event) => {
             // console.log('RouterLinkDirective', event, this.routerLink);
             // !!! skipLocationChange
             const navigationExtras = {
@@ -52,7 +56,7 @@ export default class RouterLinkDirective extends Directive {
             RouterService.setRouterLink(this.routerLink, navigationExtras);
             event.preventDefault();
             return false;
-        });
+        }));
     }
     onChanges() {
         const { node } = getContext(this);
@@ -62,7 +66,7 @@ export default class RouterLinkDirective extends Directive {
     }
 }
 RouterLinkDirective.meta = {
-    selector: '[routerLink],[[routerLink]]',
+    selector: '[routerLink]',
     inputs: ['routerLink'],
 };
 /*

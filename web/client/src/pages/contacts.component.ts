@@ -10,13 +10,13 @@ export default class ContactsComponent extends Component {
 			route.data$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe((data: RouterKeyValue) => {
-				this.title = data.title;
+				const title = this.title = data.title as string;
+				document.title = title;
 				// this.pushChanges(); // !!not needed;
 				// console.log('ContactsComponent', data);
 			});
 		}
 	}
-
 	static meta: IFactoryMeta = {
 		selector: '[contacts-component]',
 		hosts: { host: RouterOutletStructure },

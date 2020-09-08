@@ -30,6 +30,7 @@
     "IRoutePath",
     "IRouterEvent",
     "IRoutes",
+    "isPromise",
     "LocationStrategy",
     "LocationStrategyHash",
     "LocationStrategyPath",
@@ -60,6 +61,8 @@
     "RouteSnapshot",
     "RoutesRecognized",
     "transition$",
+    "transitionOnce",
+    "transitionOnced",
     "View"
   ]
 }

@@ -37,5 +37,4 @@ export default class AppModule extends Module {
 		],
 		bootstrap: AppComponent,
 	};
-
 }

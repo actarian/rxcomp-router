@@ -1,4 +1,5 @@
 import { decodeBase64, decodeJson, encodeBase64, encodeJson, isPlatformBrowser, Serializer } from 'rxcomp';
+import { RouteSnapshot } from '../route/route-snapshot';
 export class LocationStrategy {
     serializeLink(routerLink) {
         const url = (Array.isArray(routerLink) ? routerLink : [routerLink]).map(x => {
@@ -108,73 +109,85 @@ export class LocationStrategy {
     getUrl(url, params) {
         return `${url}${params ? '?' + params.toString() : ''}`;
     }
-    setHistory(url, params, popped) {
-        if (isPlatformBrowser && typeof history !== 'undefined' && history.pushState) {
-            const title = document.title;
-            url = this.getUrl(url, params);
+    pushState(url, snapshot, popped) {
+        if (LocationStrategy.historySupported()) {
+            // url = this.getUrl(url, params);
             // !!!
             // const state = params ? params.toString() : '';
             // console.log(state);
-            if (popped) {
-                history.replaceState(undefined, title, url);
+            // if (popped) {
+            // history.replaceState(undefined, title, url);
+            // } else {
+            if (!popped) {
+                try {
+                    const state = this.snapshotToState(snapshot);
+                    console.log('LocationStrategy.snapshotToState state', state);
+                    // console.log(state);
+                    const title = document.title; // you can pass null as string cause title is a DOMString!
+                    history.pushState(state, title, url);
+                }
+                catch (error) {
+                    console.log('LocationStrategy.pushState.error', error);
+                }
+            }
+        }
+        else if (this.historyRequired()) {
+            throw new Error('LocationStrategyError: history not supported!');
+        }
+        else {
+            location.hash = url;
+        }
+    }
+    snapshotToState(snapshot, pool = []) {
+        let state = undefined;
+        if (snapshot) {
+            if (pool.indexOf(snapshot) !== -1) {
+                state = snapshot.path;
             }
             else {
-                history.pushState(undefined, title, url);
+                pool.push(snapshot);
+                state = {};
+                state.path = snapshot.path;
+                state.initialUrl = snapshot.initialUrl;
+                state.urlAfterRedirects = snapshot.urlAfterRedirects;
+                state.extractedUrl = snapshot.extractedUrl;
+                state.remainUrl = snapshot.remainUrl;
+                state.childRoute = this.snapshotToState(snapshot.childRoute, pool);
+                state.previousRoute = this.snapshotToState(snapshot.previousRoute, pool);
+                state.data = snapshot.data;
+                state.params = snapshot.params;
+                state.queryParams = snapshot.queryParams;
             }
         }
+        return state;
     }
-}
-export function encodeParam(value) {
-    return `;${value}`;
-}
-export function decodeParam(value) {
-    return value.substring(1, value.length);
+    stateToSnapshot(routes, state, pool = []) {
+        let snapshot;
+        if (state) {
+            const route = routes.find(r => r.path = state.path);
+            if (route) {
+                if (typeof state === 'string') {
+                    snapshot = pool.find(x => x.path === state);
+                }
+                else {
+                    snapshot = new RouteSnapshot(Object.assign(Object.assign({}, route), { initialUrl: state.initialUrl, urlAfterRedirects: state.urlAfterRedirects, extractedUrl: state.extractedUrl, remainUrl: state.remainUrl, redirectTo: '', data: state.data, params: state.params, queryParams: state.queryParams }));
+                    pool.push(snapshot);
+                    snapshot.childRoute = this.stateToSnapshot(routes, state.childRoute, pool);
+                    snapshot.previousRoute = this.stateToSnapshot(routes, state.previousRoute, pool);
+                }
+                route.snapshot = snapshot;
+            }
+        }
+        return snapshot;
+    }
+    historyRequired() {
+        return true;
+    }
+    static historySupported() {
+        return isPlatformBrowser && typeof history !== 'undefined' && typeof history.pushState === 'function';
+    }
 }
 export class LocationStrategyPath extends LocationStrategy {
-    serialize(routePath) {
-        return `${routePath.prefix}${routePath.path}${routePath.search}${routePath.hash}`;
-    }
-    resolve(url, target = {}) {
-        let prefix = '';
-        let path = '';
-        let query = '';
-        let search = '';
-        let hash = '';
-        let segments;
-        let params;
-        const regExp = /^([^\?|\#]*)?(\?[^\#]*)?(\#[^\#]*?)?$/gm;
-        const matches = url.matchAll(regExp);
-        for (let match of matches) {
-            const g1 = match[1];
-            const g2 = match[2];
-            const g3 = match[3];
-            if (g1) {
-                path = g1;
-            }
-            if (g2) {
-                query = g2;
-            }
-            if (g3) {
-                hash = g3;
-            }
-        }
-        prefix = prefix;
-        path = path;
-        query = query;
-        hash = hash.substring(1, hash.length);
-        search = query.substring(1, query.length);
-        segments = path.split('/').filter(x => x !== '');
-        params = {};
-        target.prefix = prefix;
-        target.path = path;
-        target.query = query;
-        target.hash = hash;
-        target.search = search;
-        target.segments = segments;
-        target.params = params;
-        // console.log('resolvePath_', url, prefix, path, query, search, hash, segments, params);
-        return target;
-    }
 }
 export class LocationStrategyHash extends LocationStrategy {
     serializeLink(routerLink) {
@@ -241,4 +254,13 @@ export class LocationStrategyHash extends LocationStrategy {
     getUrl(url, params) {
         return `${params ? '?' + params.toString() : ''}${this.getPath(url)}`;
     }
+    historyRequired() {
+        return false;
+    }
+}
+export function encodeParam(value) {
+    return `;${value}`;
+}
+export function decodeParam(value) {
+    return value.substring(1, value.length);
 }

@@ -7,7 +7,6 @@ export declare class RouteSnapshot implements IBaseRoute {
     path: string;
     pathMatch: 'prefix' | 'full';
     component: typeof Component;
-    redirectTo?: string;
     segments: RouteSegment[];
     relative: boolean;
     children?: Route[];
@@ -17,6 +16,7 @@ export declare class RouteSnapshot implements IBaseRoute {
     urlAfterRedirects?: string;
     extractedUrl?: string;
     remainUrl: string;
+    redirectTo?: string;
     data: RouterKeyValue;
     params: RouterKeyValue;
     queryParams: RouterKeyValue;
@@ -28,6 +28,7 @@ export declare class RouteSnapshot implements IBaseRoute {
     canActivate: ((route: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[];
     canActivateChild: ((childRoute: RouteSnapshot) => Observable<boolean | RouteComponent[]>)[];
     element?: IElement;
+    previousRoute?: RouteSnapshot;
     constructor(options?: IBaseRoute);
     next(snapshot: RouteSnapshot): void;
 }

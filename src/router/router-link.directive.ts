@@ -1,6 +1,6 @@
 import { Directive, getContext, IFactoryMeta } from 'rxcomp';
 import { fromEvent, Observable } from 'rxjs';
-import { shareReplay, takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 import { INavigationExtras } from '../route/route';
 import { RoutePath } from '../route/route-path';
 import { RouteSegment } from '../route/route-segment';
@@ -44,22 +44,28 @@ export default class RouterLinkDirective extends Directive {
 		return segments;
 	}
 	onInit() {
+		// const { node, module } = getContext(this);
+		// console.log('RouterLinkDirective.onInit', this.routerLink, node, module);
+		this.routerLink$().pipe(
+			takeUntil(this.unsubscribe$),
+		).subscribe();
+	}
+	routerLink$(): Observable<boolean> {
 		const { node } = getContext(this);
-		const event$: Observable<Event> = fromEvent<Event>(node, 'click').pipe(shareReplay(1));
-		event$.pipe(
-			takeUntil(this.unsubscribe$)
-		).subscribe(event => {
-			// console.log('RouterLinkDirective', event, this.routerLink);
-			// !!! skipLocationChange
-			const navigationExtras: INavigationExtras = {
-				skipLocationChange: this.skipLocationChange,
-				replaceUrl: this.replaceUrl,
-				state: this.state,
-			};
-			RouterService.setRouterLink(this.routerLink, navigationExtras);
-			event.preventDefault();
-			return false;
-		});
+		return fromEvent<Event>(node, 'click').pipe(
+			map((event) => {
+				// console.log('RouterLinkDirective', event, this.routerLink);
+				// !!! skipLocationChange
+				const navigationExtras: INavigationExtras = {
+					skipLocationChange: this.skipLocationChange,
+					replaceUrl: this.replaceUrl,
+					state: this.state,
+				};
+				RouterService.setRouterLink(this.routerLink, navigationExtras);
+				event.preventDefault();
+				return false;
+			})
+		);
 	}
 	onChanges() {
 		const { node } = getContext(this);
@@ -68,7 +74,7 @@ export default class RouterLinkDirective extends Directive {
 		node.setAttribute('href', routePath.url);
 	}
 	static meta: IFactoryMeta = {
-		selector: '[routerLink],[[routerLink]]',
+		selector: '[routerLink]',
 		inputs: ['routerLink'],
 	};
 }

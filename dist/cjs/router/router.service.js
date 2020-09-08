@@ -21,18 +21,183 @@ var RouterService = /** @class */ (function () {
     });
     RouterService.setRoutes = function (routes) {
         this.routes = routes.map(function (x) { return new route_1.Route(x); });
-        this.observe$ = makeObserve$_(this.routes, this.route$, this.events$, this.locationStrategy);
+        // this.observe$ = makeObserve$_(this.routes, this.route$, this.events$, this.locationStrategy);
+        this.observe$ = this.makeObserve$();
         return this;
+    };
+    RouterService.makeObserve$ = function () {
+        var routes = this.routes;
+        var route$ = this.route$;
+        var events$ = this.events$;
+        var locationStrategy = this.locationStrategy;
+        var currentRoute;
+        // console.log('RouterService.WINDOW', WINDOW!!);
+        var stateEvents$ = rxcomp_1.isPlatformServer ? rxjs_1.EMPTY : rxjs_1.fromEvent(rxcomp_1.WINDOW, 'popstate').pipe(operators_1.map(function (event) {
+            var routerLink = "" + document.location.pathname + document.location.search + document.location.hash;
+            /*
+            // !!! state to snapshot
+            const flatRoutes = getFlatRoutes_(routes);
+            flatRoutes.forEach(r => r.snapshot = undefined);
+            const snapshot: RouteSnapshot = locationStrategy.stateToSnapshot(flatRoutes, event.state) as RouteSnapshot;
+            console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
+            // console.log('RouterService PopStateEvent', 'snapshot', snapshot, 'routes', flatRoutes.map(route => route.snapshot));
+            return new NavigationEnd({ route: snapshot, routerLink, url: routerLink, trigger: 'popstate' });
+            */
+            return new router_events_1.NavigationStart({ routerLink: routerLink, trigger: 'popstate' });
+        }), operators_1.shareReplay(1));
+        return rxjs_1.merge(stateEvents$, events$).pipe(operators_1.switchMap(function (event) {
+            if (event instanceof router_events_1.GuardsCheckStart) {
+                return makeCanDeactivateResponse$_(events$, event, currentRoute).pipe(operators_1.switchMap(function (nextEvent) {
+                    if (nextEvent instanceof router_events_1.NavigationCancel) {
+                        return rxjs_1.of(nextEvent);
+                    }
+                    else {
+                        return makeCanLoadResponse$_(events$, event).pipe(operators_1.switchMap(function (nextEvent) {
+                            if (nextEvent instanceof router_events_1.NavigationCancel) {
+                                return rxjs_1.of(nextEvent);
+                            }
+                            else {
+                                return makeCanActivateChildResponse$_(events$, event);
+                            }
+                        }));
+                    }
+                }));
+            }
+            else if (event instanceof router_events_1.ChildActivationStart) {
+                return makeCanActivateResponse$_(events$, event);
+            }
+            else {
+                return rxjs_1.of(event);
+            }
+        }), operators_1.tap(function (event) {
+            var _a, _b, _c;
+            // console.log('RouterEvent', event);
+            if (event instanceof router_events_1.NavigationStart) {
+                // console.log('NavigationStart', event.routerLink);
+                var routerLink = event.routerLink;
+                // console.log('routerLink', routerLink);
+                var snapshot = void 0;
+                var initialUrl = void 0;
+                var routePath = RouterService.getPath(routerLink);
+                // console.log(routePath, routePath.url);
+                initialUrl = routePath.url;
+                // console.log('initialUrl', initialUrl);
+                var isRelative = initialUrl.indexOf('/') !== 0;
+                if (isRelative && currentRoute && ((_a = currentRoute.children) === null || _a === void 0 ? void 0 : _a.length)) {
+                    snapshot = resolveRoutes_(routes, currentRoute.children, initialUrl, currentRoute);
+                    if (snapshot) {
+                        currentRoute.childRoute = snapshot;
+                        snapshot.parent = currentRoute;
+                        snapshot = currentRoute;
+                    }
+                    // console.log('relative', currentRoute, snapshot, initialUrl);
+                }
+                else {
+                    snapshot = resolveRoutes_(routes, routes, initialUrl, currentRoute);
+                    // console.log('absolute');
+                }
+                if (snapshot) {
+                    // console.log('RouterService.makeObserve$_', 'NavigationStart', snapshot);
+                    currentRoute = snapshot;
+                    events$.next(new router_events_1.RoutesRecognized(tslib_1.__assign(tslib_1.__assign({}, event), { route: snapshot })));
+                }
+                else {
+                    events$.next(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, event), { error: new Error('unknown route') })));
+                }
+            }
+            else if (event instanceof router_events_1.RoutesRecognized) {
+                // console.log('RoutesRecognized', event.route.component, event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
+                events$.next(new router_events_1.GuardsCheckStart(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.GuardsCheckStart) {
+                // console.log('GuardsCheckStart', event);
+                events$.next(new router_events_1.ChildActivationStart(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ChildActivationStart) {
+                // console.log('ChildActivationStart', event);
+                events$.next(new router_events_1.ActivationStart(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ActivationStart) {
+                // console.log('ActivationStart', event);
+                events$.next(new router_events_1.GuardsCheckEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.GuardsCheckEnd) {
+                // console.log('GuardsCheckEnd', event);
+                events$.next(new router_events_1.ResolveStart(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ResolveStart) {
+                // console.log('ResolveStart', event);
+                events$.next(new router_events_1.ResolveEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ResolveEnd) {
+                // console.log('ResolveEnd', event);
+                events$.next(new router_events_1.ActivationEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ActivationEnd) {
+                // console.log('ActivationEnd', event);
+                events$.next(new router_events_1.ChildActivationEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.ChildActivationEnd) {
+                // console.log('ChildActivationEnd', event);
+                events$.next(new router_events_1.RouteConfigLoadStart(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.RouteConfigLoadStart) {
+                // console.log('RouteConfigLoadStart', event);
+                events$.next(new router_events_1.RouteConfigLoadEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.RouteConfigLoadEnd) {
+                // console.log('RouteConfigLoadEnd', event);
+                events$.next(new router_events_1.NavigationEnd(tslib_1.__assign({}, event)));
+            }
+            else if (event instanceof router_events_1.NavigationEnd) {
+                console.log('NavigationEnd', event);
+                var segments = [];
+                var source = event.route;
+                while (source != null) {
+                    // console.log(source.params, source.data);
+                    if ((_b = source.extractedUrl) === null || _b === void 0 ? void 0 : _b.length) {
+                        segments.push(source.extractedUrl);
+                    }
+                    if (source.childRoute) {
+                        source = source.childRoute;
+                    }
+                    else {
+                        if ((_c = source.remainUrl) === null || _c === void 0 ? void 0 : _c.length) {
+                            segments[segments.length - 1] = segments[segments.length - 1] + source.remainUrl;
+                        }
+                        source = undefined;
+                    }
+                }
+                var extractedUrl = segments.join('/').replace(/\/\//g, '/');
+                // console.log('NavigationEnd', event.route.extractedUrl, event.route);
+                clearRoutes_(routes, event.route);
+                locationStrategy.pushState(extractedUrl, event.route, event.trigger === 'popstate');
+                // pushState_(locationStrategy, extractedUrl, undefined, event.trigger === 'popstate');
+                route$.next(event.route);
+            }
+            else if (event instanceof router_events_1.NavigationCancel) {
+                // console.log('NavigationCancel', event.reason, event.redirectTo);
+                if (event.redirectTo) {
+                    // const routePath: RoutePath = RouterService.getPath(event.redirectTo);
+                    events$.next(new router_events_1.NavigationStart({ routerLink: event.redirectTo, trigger: 'imperative' }));
+                }
+            }
+            else if (event instanceof router_events_1.NavigationError) {
+                console.log('RouterService NavigationError', event.error);
+            }
+        }), operators_1.catchError(function (error) { return rxjs_1.of(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, event), { error: error }))); }), operators_1.shareReplay(1));
     };
     RouterService.setRouterLink = function (routerLink, extras) {
         if (extras === void 0) { extras = { skipLocationChange: false }; }
         // ['/hero', hero.id];
+        // console.log('RouterService.setRouterLink', routerLink);
         this.events$.next(new router_events_1.NavigationStart({ routerLink: routerLink, trigger: 'imperative' }));
     };
     RouterService.navigate = function (routerLink, extras) {
         if (extras === void 0) { extras = { skipLocationChange: false }; }
         // navigate(['items'], { relativeTo: this.route });
         // navigate(['/heroes', { id: heroId }]);
+        // console.log('RouterService.navigate', routerLink);
         this.events$.next(new router_events_1.NavigationStart({ routerLink: routerLink, trigger: 'imperative' }));
     };
     RouterService.findRoute = function (routerLink) {
@@ -108,8 +273,8 @@ var RouterService = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    RouterService.useLocationStrategy = function (locationStrategyType) {
-        this.locationStrategy_ = new locationStrategyType();
+    RouterService.useLocationStrategy = function (locationStrategyFactory) {
+        this.locationStrategy_ = new locationStrategyFactory();
     };
     RouterService.routes = [];
     RouterService.route$ = new rxjs_1.ReplaySubject(1);
@@ -143,15 +308,18 @@ function clearRoutes_(routes, currentSnapshot) {
         if (route.snapshot && snapshots.indexOf(route.snapshot) === -1) {
             route.snapshot = undefined;
         }
+        else {
+            console.log(route);
+        }
     });
 }
-function resolveRoutes_(routes, childRoutes, initialUrl) {
+function resolveRoutes_(routes, childRoutes, initialUrl, previousRoute) {
     var e_2, _a;
     var resolvedSnapshot;
     try {
         for (var childRoutes_1 = tslib_1.__values(childRoutes), childRoutes_1_1 = childRoutes_1.next(); !childRoutes_1_1.done; childRoutes_1_1 = childRoutes_1.next()) {
             var route = childRoutes_1_1.value;
-            var snapshot = resolveRoute_(routes, route, initialUrl);
+            var snapshot = resolveRoute_(routes, route, initialUrl, previousRoute);
             if (snapshot) {
                 if (resolvedSnapshot) {
                     /*
@@ -177,7 +345,7 @@ function resolveRoutes_(routes, childRoutes, initialUrl) {
     return resolvedSnapshot;
     // return childRoutes.reduce<RouteSnapshot | undefined>((p, route) => p || resolveRoute_(routes, route, initialUrl), undefined);
 }
-function resolveRoute_(routes, route, initialUrl) {
+function resolveRoute_(routes, route, initialUrl, previousRoute) {
     var _a;
     // console.log('resolveRoute_', initialUrl);
     var urlAfterRedirects;
@@ -192,7 +360,7 @@ function resolveRoute_(routes, route, initialUrl) {
     if (route.redirectTo) {
         // console.log('RouterService.resolveRoute_', 'match', initialUrl, '=>', route.redirectTo, match);
         var routePath_1 = RouterService.getPath(route.redirectTo);
-        return resolveRoutes_(routes, routes, routePath_1.url);
+        return resolveRoutes_(routes, routes, routePath_1.url, previousRoute);
     } /* else {
         // console.log('RouterService.resolveRoute_', 'match', initialUrl, '=>', route.path, match);
     }*/
@@ -201,9 +369,10 @@ function resolveRoute_(routes, route, initialUrl) {
     var routePath = new route_path_1.RoutePath(extractedUrl, route.segments, undefined, RouterService.locationStrategy);
     var params = routePath.params;
     var snapshot = new route_snapshot_1.RouteSnapshot(tslib_1.__assign(tslib_1.__assign({}, route), { initialUrl: initialUrl, urlAfterRedirects: urlAfterRedirects, extractedUrl: extractedUrl, remainUrl: remainUrl, params: params }));
+    snapshot.previousRoute = previousRoute;
     route.snapshot = snapshot;
     if (snapshot && snapshot.remainUrl.length && ((_a = route.children) === null || _a === void 0 ? void 0 : _a.length)) {
-        var childSnapshot = resolveRoutes_(routes, route.children, snapshot.remainUrl);
+        var childSnapshot = resolveRoutes_(routes, route.children, snapshot.remainUrl, previousRoute);
         snapshot.childRoute = childSnapshot;
         if (childSnapshot) {
             childSnapshot.parent = snapshot;
@@ -282,158 +451,4 @@ function makeCanActivateResponse$_(events$, event) {
     else {
         return rxjs_1.of(event);
     }
-}
-function makeObserve$_(routes, route$, events$, locationStrategy) {
-    var currentRoute;
-    // console.log('RouterService.WINDOW', WINDOW!!);
-    var stateEvents$ = rxcomp_1.isPlatformServer ? rxjs_1.EMPTY : rxjs_1.merge(rxjs_1.fromEvent(rxcomp_1.WINDOW, 'popstate')).pipe(
-    /*
-    tap((event: PopStateEvent) => {
-        // detect rxcomp !!!
-        // event.preventDefault();
-        // event.stopImmediatePropagation(); // !!!
-        // history.go(1);
-        // console.log('RouterService.onPopState', `location: "${document.location.pathname}"`, `state: "${event.state}"`);
-    }),
-    */
-    operators_1.map(function (event) { return new router_events_1.NavigationStart({ routerLink: document.location.pathname, trigger: 'popstate' }); }), operators_1.shareReplay(1));
-    return rxjs_1.merge(stateEvents$, events$).pipe(operators_1.switchMap(function (event) {
-        if (event instanceof router_events_1.GuardsCheckStart) {
-            return makeCanDeactivateResponse$_(events$, event, currentRoute).pipe(operators_1.switchMap(function (nextEvent) {
-                if (nextEvent instanceof router_events_1.NavigationCancel) {
-                    return rxjs_1.of(nextEvent);
-                }
-                else {
-                    return makeCanLoadResponse$_(events$, event).pipe(operators_1.switchMap(function (nextEvent) {
-                        if (nextEvent instanceof router_events_1.NavigationCancel) {
-                            return rxjs_1.of(nextEvent);
-                        }
-                        else {
-                            return makeCanActivateChildResponse$_(events$, event);
-                        }
-                    }));
-                }
-            }));
-        }
-        else if (event instanceof router_events_1.ChildActivationStart) {
-            return makeCanActivateResponse$_(events$, event);
-        }
-        else {
-            return rxjs_1.of(event);
-        }
-    }), operators_1.tap(function (event) {
-        var _a, _b, _c;
-        if (event instanceof router_events_1.NavigationStart) {
-            // console.log('NavigationStart', event.routerLink);
-            var routerLink = event.routerLink;
-            // console.log('routerLink', routerLink);
-            var snapshot = void 0;
-            var initialUrl = void 0;
-            var routePath = RouterService.getPath(routerLink);
-            // console.log(routePath, routePath.url);
-            initialUrl = routePath.url;
-            // console.log('initialUrl', initialUrl);
-            var isRelative = initialUrl.indexOf('/') !== 0;
-            if (isRelative && currentRoute && ((_a = currentRoute.children) === null || _a === void 0 ? void 0 : _a.length)) {
-                snapshot = resolveRoutes_(routes, currentRoute.children, initialUrl);
-                if (snapshot) {
-                    currentRoute.childRoute = snapshot;
-                    snapshot.parent = currentRoute;
-                    snapshot = currentRoute;
-                }
-                // console.log('relative', currentRoute, snapshot, initialUrl);
-            }
-            else {
-                snapshot = resolveRoutes_(routes, routes, initialUrl);
-                // console.log('absolute');
-            }
-            if (snapshot) {
-                // console.log('RouterService.makeObserve$_', 'NavigationStart', snapshot);
-                currentRoute = snapshot;
-                events$.next(new router_events_1.RoutesRecognized(tslib_1.__assign(tslib_1.__assign({}, event), { route: snapshot })));
-            }
-            else {
-                events$.next(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, event), { error: new Error('unknown route') })));
-            }
-        }
-        else if (event instanceof router_events_1.RoutesRecognized) {
-            // console.log('RoutesRecognized', event.route.component, event.route.initialUrl, event.route.extractedUrl, event.route.urlAfterRedirects);
-            events$.next(new router_events_1.GuardsCheckStart(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.GuardsCheckStart) {
-            // console.log('GuardsCheckStart', event);
-            events$.next(new router_events_1.ChildActivationStart(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ChildActivationStart) {
-            // console.log('ChildActivationStart', event);
-            events$.next(new router_events_1.ActivationStart(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ActivationStart) {
-            // console.log('ActivationStart', event);
-            events$.next(new router_events_1.GuardsCheckEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.GuardsCheckEnd) {
-            // console.log('GuardsCheckEnd', event);
-            events$.next(new router_events_1.ResolveStart(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ResolveStart) {
-            // console.log('ResolveStart', event);
-            events$.next(new router_events_1.ResolveEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ResolveEnd) {
-            // console.log('ResolveEnd', event);
-            events$.next(new router_events_1.ActivationEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ActivationEnd) {
-            // console.log('ActivationEnd', event);
-            events$.next(new router_events_1.ChildActivationEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.ChildActivationEnd) {
-            // console.log('ChildActivationEnd', event);
-            events$.next(new router_events_1.RouteConfigLoadStart(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.RouteConfigLoadStart) {
-            // console.log('RouteConfigLoadStart', event);
-            events$.next(new router_events_1.RouteConfigLoadEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.RouteConfigLoadEnd) {
-            // console.log('RouteConfigLoadEnd', event);
-            events$.next(new router_events_1.NavigationEnd(tslib_1.__assign({}, event)));
-        }
-        else if (event instanceof router_events_1.NavigationEnd) {
-            var segments = [];
-            var source = event.route;
-            while (source != null) {
-                // console.log(source.params, source.data);
-                if ((_b = source.extractedUrl) === null || _b === void 0 ? void 0 : _b.length) {
-                    segments.push(source.extractedUrl);
-                }
-                if (source.childRoute) {
-                    source = source.childRoute;
-                }
-                else {
-                    if ((_c = source.remainUrl) === null || _c === void 0 ? void 0 : _c.length) {
-                        segments[segments.length - 1] = segments[segments.length - 1] + source.remainUrl;
-                    }
-                    source = undefined;
-                }
-            }
-            var extractedUrl = segments.join('/').replace(/\/\//g, '/');
-            // console.log('NavigationEnd', event.route.extractedUrl, event.route);
-            clearRoutes_(routes, event.route);
-            locationStrategy.setHistory(extractedUrl, undefined, event.trigger === 'popstate');
-            // setHistory_(locationStrategy, extractedUrl, undefined, event.trigger === 'popstate');
-            route$.next(event.route);
-        }
-        else if (event instanceof router_events_1.NavigationCancel) {
-            // console.log('NavigationCancel', event.reason, event.redirectTo);
-            if (event.redirectTo) {
-                // const routePath: RoutePath = RouterService.getPath(event.redirectTo);
-                events$.next(new router_events_1.NavigationStart({ routerLink: event.redirectTo, trigger: 'imperative' }));
-            }
-        }
-        else if (event instanceof router_events_1.NavigationError) {
-            console.log('NavigationError', event.error);
-        }
-    }), operators_1.catchError(function (error) { return rxjs_1.of(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, event), { error: error }))); }), operators_1.shareReplay(1));
 }

@@ -18,4 +18,3 @@ export declare function mapCanDeactivate$_<T>(activator: ICanDeactivate<T>): (co
 export declare function mapCanLoad$_(activator: ICanLoad): (route: RouteSnapshot, segments: RouteSegment[]) => Observable<boolean | RouteComponent[]>;
 export declare function mapCanActivate$_(activator: ICanActivate): (route: RouteSnapshot) => Observable<boolean | RouteComponent[]>;
 export declare function mapCanActivateChild$_(activator: ICanActivateChild): (childRoute: RouteSnapshot) => Observable<boolean | RouteComponent[]>;
-export declare function isPromise<T>(object: any): object is Promise<T>;

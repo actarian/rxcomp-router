@@ -38,7 +38,7 @@ var RouterLinkActiveDirective = /** @class */ (function (_super) {
         var _a;
         var path = router_service_1.default.getPath(this.host.routerLink);
         var isActive = ((_a = path.route) === null || _a === void 0 ? void 0 : _a.snapshot) != null;
-        // console.log('RouterLinkActive.isActive', isActive);
+        console.log('RouterLinkActive.isActive', isActive, path.route);
         return isActive;
     };
     RouterLinkActiveDirective.meta = {

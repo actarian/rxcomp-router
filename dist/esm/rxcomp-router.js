@@ -1,5 +1,6 @@
-export { default as View } from './core/view';
+export { default as View, EnterTransition, LeaveTransition, Transition } from './core/view';
 export { LocationStrategy, LocationStrategyHash, LocationStrategyPath } from './location/location.strategy';
+export { asObservable, isPromise } from './observable/observable';
 export { Route } from './route/route';
 export { RoutePath } from './route/route-path';
 export { RouteSegment } from './route/route-segment';
@@ -9,5 +10,5 @@ export { RouteLocationStrategy } from './router.types';
 export { ActivationEnd, ActivationStart, ChildActivationEnd, ChildActivationStart, GuardsCheckEnd, GuardsCheckStart, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, ResolveEnd, ResolveStart, RouteConfigLoadEnd, RouteConfigLoadStart, RouterEvent, RoutesRecognized } from './router/router-events';
 export { default as RouterLinkActiveDirective } from './router/router-link-active.directive';
 export { default as RouterLinkDirective } from './router/router-link.directive';
-export { asObservable, default as RouterOutletStructure } from './router/router-outlet.structure';
-export { transition$ } from './transition/transition';
+export { default as RouterOutletStructure } from './router/router-outlet.structure';
+export { transition$, transitionOnce, transitionOnced } from './transition/transition';

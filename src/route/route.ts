@@ -7,7 +7,6 @@ import { RouteSnapshot } from './route-snapshot';
 
 export type IRoutes = IRoute[];
 export type Routes = Route[];
-
 export interface INavigationExtras {
 	relativeTo?: RouteSnapshot | null;
 	queryParams?: RouterKeyValue; // Params | null;
@@ -19,14 +18,12 @@ export interface INavigationExtras {
 	replaceUrl?: boolean;
 	state?: { [key: string]: any };
 }
-
 export interface IBaseRoute {
 	path?: string;
 	pathMatch?: 'prefix' | 'full';
 	component?: typeof Component;
 	// matcher?: UrlMatcher;
 	matcher?: RegExp;
-	redirectTo?: string;
 	outlet?: string;
 	children?: IRoutes | Routes;
 	// children?: IRoute[];
@@ -34,6 +31,7 @@ export interface IBaseRoute {
 	urlAfterRedirects?: string;
 	extractedUrl?: string;
 	remainUrl?: string;
+	redirectTo?: string;
 	// resolve?: ResolveData;
 	// loadChildren?: LoadChildren;
 	// runGuardsAndResolvers?: RunGuardsAndResolvers;
@@ -41,14 +39,12 @@ export interface IBaseRoute {
 	params?: RouterKeyValue;
 	queryParams?: RouterKeyValue;
 }
-
 export interface IRoute extends IBaseRoute {
 	canActivate?: ICanActivate[];
 	canActivateChild?: ICanActivateChild[];
 	canDeactivate?: ICanDeactivate<Component>[];
 	canLoad?: ICanLoad[];
 }
-
 export class Route implements IBaseRoute {
 	path!: string;
 	pathMatch: 'prefix' | 'full' = 'prefix';

@@ -1,4 +1,5 @@
 import { isObservable, Observable, Observer, Subscription } from 'rxjs';
+import { isPromise } from '../observable/observable';
 import { RouteComponent, RouterActivatorResult } from '../router.types';
 import { RouteSegment } from './route-segment';
 import { RouteSnapshot } from './route-snapshot';
@@ -39,10 +40,6 @@ export function mapCanActivateChild$_(activator: ICanActivateChild): (childRoute
 		return makeObserver$_(() => activator.canActivateChild(childRoute));
 	};
 }
-export function isPromise<T>(object: any): object is Promise<T> {
-	return object instanceof Promise || (typeof object === 'object' && 'then' in object && typeof object['then'] === 'function');
-}
-
 function makeObserver$_(callback: () => RouterActivatorResult) {
 	return Observable.create(function (observer: Observer<boolean | RouteComponent[]>) {
 		let subscription: Subscription;

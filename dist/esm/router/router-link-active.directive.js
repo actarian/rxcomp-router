@@ -33,7 +33,7 @@ export default class RouterLinkActiveDirective extends Directive {
         var _a;
         const path = RouterService.getPath(this.host.routerLink);
         const isActive = ((_a = path.route) === null || _a === void 0 ? void 0 : _a.snapshot) != null;
-        // console.log('RouterLinkActive.isActive', isActive);
+        console.log('RouterLinkActive.isActive', isActive, path.route);
         return isActive;
     }
 }

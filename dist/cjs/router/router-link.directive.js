@@ -61,10 +61,14 @@ var RouterLinkDirective = /** @class */ (function (_super) {
         return segments;
     };
     RouterLinkDirective.prototype.onInit = function () {
+        // const { node, module } = getContext(this);
+        // console.log('RouterLinkDirective.onInit', this.routerLink, node, module);
+        this.routerLink$().pipe(operators_1.takeUntil(this.unsubscribe$)).subscribe();
+    };
+    RouterLinkDirective.prototype.routerLink$ = function () {
         var _this = this;
         var node = rxcomp_1.getContext(this).node;
-        var event$ = rxjs_1.fromEvent(node, 'click').pipe(operators_1.shareReplay(1));
-        event$.pipe(operators_1.takeUntil(this.unsubscribe$)).subscribe(function (event) {
+        return rxjs_1.fromEvent(node, 'click').pipe(operators_1.map(function (event) {
             // console.log('RouterLinkDirective', event, this.routerLink);
             // !!! skipLocationChange
             var navigationExtras = {
@@ -75,7 +79,7 @@ var RouterLinkDirective = /** @class */ (function (_super) {
             router_service_1.default.setRouterLink(_this.routerLink, navigationExtras);
             event.preventDefault();
             return false;
-        });
+        }));
     };
     RouterLinkDirective.prototype.onChanges = function () {
         var node = rxcomp_1.getContext(this).node;
@@ -84,7 +88,7 @@ var RouterLinkDirective = /** @class */ (function (_super) {
         node.setAttribute('href', routePath.url);
     };
     RouterLinkDirective.meta = {
-        selector: '[routerLink],[[routerLink]]',
+        selector: '[routerLink]',
         inputs: ['routerLink'],
     };
     return RouterLinkDirective;
