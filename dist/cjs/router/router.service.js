@@ -31,21 +31,24 @@ var RouterService = /** @class */ (function () {
         var events$ = this.events$;
         var locationStrategy = this.locationStrategy;
         var currentRoute;
+        var currentEvent;
         // console.log('RouterService.WINDOW', WINDOW!!);
         var stateEvents$ = rxcomp_1.isPlatformServer ? rxjs_1.EMPTY : rxjs_1.fromEvent(rxcomp_1.WINDOW, 'popstate').pipe(operators_1.map(function (event) {
+            currentEvent = event;
             var routerLink = "" + document.location.pathname + document.location.search + document.location.hash;
             /*
             // !!! state to snapshot
             const flatRoutes = getFlatRoutes_(routes);
             flatRoutes.forEach(r => r.snapshot = undefined);
             const snapshot: RouteSnapshot = locationStrategy.stateToSnapshot(flatRoutes, event.state) as RouteSnapshot;
-            console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
+            // console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
             // console.log('RouterService PopStateEvent', 'snapshot', snapshot, 'routes', flatRoutes.map(route => route.snapshot));
             return new NavigationEnd({ route: snapshot, routerLink, url: routerLink, trigger: 'popstate' });
             */
             return new router_events_1.NavigationStart({ routerLink: routerLink, trigger: 'popstate' });
         }), operators_1.shareReplay(1));
         return rxjs_1.merge(stateEvents$, events$).pipe(operators_1.switchMap(function (event) {
+            currentEvent = event;
             if (event instanceof router_events_1.GuardsCheckStart) {
                 return makeCanDeactivateResponse$_(events$, event, currentRoute).pipe(operators_1.switchMap(function (nextEvent) {
                     if (nextEvent instanceof router_events_1.NavigationCancel) {
@@ -71,6 +74,7 @@ var RouterService = /** @class */ (function () {
             }
         }), operators_1.tap(function (event) {
             var _a, _b, _c;
+            currentEvent = event;
             // console.log('RouterEvent', event);
             if (event instanceof router_events_1.NavigationStart) {
                 // console.log('NavigationStart', event.routerLink);
@@ -150,7 +154,7 @@ var RouterService = /** @class */ (function () {
                 events$.next(new router_events_1.NavigationEnd(tslib_1.__assign({}, event)));
             }
             else if (event instanceof router_events_1.NavigationEnd) {
-                console.log('NavigationEnd', event);
+                // console.log('NavigationEnd', event);
                 var segments = [];
                 var source = event.route;
                 while (source != null) {
@@ -183,9 +187,9 @@ var RouterService = /** @class */ (function () {
                 }
             }
             else if (event instanceof router_events_1.NavigationError) {
-                console.log('RouterService NavigationError', event.error);
+                console.warn('RouterService NavigationError', event.error);
             }
-        }), operators_1.catchError(function (error) { return rxjs_1.of(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, event), { error: error }))); }), operators_1.shareReplay(1));
+        }), operators_1.catchError(function (error) { return rxjs_1.of(new router_events_1.NavigationError(tslib_1.__assign(tslib_1.__assign({}, (currentEvent || {})), { error: error }))); }), operators_1.shareReplay(1));
     };
     RouterService.setRouterLink = function (routerLink, extras) {
         if (extras === void 0) { extras = { skipLocationChange: false }; }
@@ -307,10 +311,9 @@ function clearRoutes_(routes, currentSnapshot) {
     flatRoutes.forEach(function (route) {
         if (route.snapshot && snapshots.indexOf(route.snapshot) === -1) {
             route.snapshot = undefined;
-        }
-        else {
+        } /* else {
             console.log(route);
-        }
+        }*/
     });
 }
 function resolveRoutes_(routes, childRoutes, initialUrl, previousRoute) {

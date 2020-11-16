@@ -121,7 +121,7 @@ export class LocationStrategy {
             if (!popped) {
                 try {
                     const state = this.snapshotToState(snapshot);
-                    console.log('LocationStrategy.snapshotToState state', state);
+                    // console.log('LocationStrategy.snapshotToState state', state);
                     // console.log(state);
                     const title = document.title; // you can pass null as string cause title is a DOMString!
                     history.pushState(state, title, url);

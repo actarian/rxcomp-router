@@ -3,10 +3,10 @@ import { Component, IElement, IFactoryMeta } from 'rxcomp';
 import { Observable } from 'rxjs';
 import { RouteSnapshot } from '../route/route-snapshot';
 
-export type TransitionCallback = (node: IElement) => Observable<boolean> | Promise<boolean> | (() => boolean) | boolean;
+export type TransitionCallback = (node: IElement) => Observable<void> | Promise<void> | (() => void) | void;
 export interface ITransitionKey extends String { }
 export interface ITransition {
-	[key: string]: (node: IElement) => Observable<boolean> | Promise<boolean> | (() => boolean) | boolean;
+	[key: string]: (node: IElement) => Observable<void> | Promise<void> | (() => void) | void;
 }
 export class Transition {
 	callback: TransitionCallback;
@@ -33,6 +33,8 @@ export interface IViewMeta extends IFactoryMeta {
 	 * 	'enter:': (node:IElement, previousRoute?:RouteSnapshot) => {
 	 *  }
 	 *	'leave:': (node:IElement, nextRoute:RouteSnapshot) => {
+	 *  }
+	 *	'once:': (node:IElement) => {
 	 *  }
 	 */
 	transitions?: ITransition;

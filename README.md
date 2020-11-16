@@ -6,10 +6,10 @@
 
  lib & dependancy    | size
 :--------------------|:----------------------------------------------------------------------------------------------|
-rxcomp-router.min.js   | ![](https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js.svg?compression=gzip)
-rxcomp-router.min.js   | ![](https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js.svg)
-rxcomp.min.js        | ![](https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js.svg?compression=gzip)
-rxcomp.min.js        | ![](https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js.svg)
+rxcomp-router.min.js   | ![](https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js.svg?compression=gzip)
+rxcomp-router.min.js   | ![](https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js.svg)
+rxcomp.min.js        | ![](https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js.svg?compression=gzip)
+rxcomp.min.js        | ![](https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js.svg)
 rxjs.min.js          | ![](https://img.badgesize.io/https://unpkg.com/rxjs@6.6.2/bundles/rxjs.umd.min.js.svg?compression=gzip)
 rxjs.min.js          | ![](https://img.badgesize.io/https://unpkg.com/rxjs@6.6.2/bundles/rxjs.umd.min.js.svg)
  
@@ -35,8 +35,8 @@ For CDN, you can use unpkg
 
 ```html
 <script src="https://unpkg.com/rxjs@6.6.2/bundles/rxjs.umd.min.js" crossorigin="anonymous" SameSite="none Secure"></script>
-<script src="https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js" crossorigin="anonymous" SameSite="none Secure"></script>  
-<script src="https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js" crossorigin="anonymous" SameSite="none Secure"></script>  
+<script src="https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js" crossorigin="anonymous" SameSite="none Secure"></script>  
+<script src="https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js" crossorigin="anonymous" SameSite="none Secure"></script>  
 ```
 
 The global namespace for RxComp is `rxcomp`
@@ -167,6 +167,54 @@ RouterModule.forRoot([
 ```
 ___
 ### View component
+Extending the `View` component you obtain a new meta attribute `transitions`.  
+With this attribute you can create animations between the enter and leave state of a router view.  
+Just set an object with this custom properties `enter:`, `leave:`, `from:a-custom-route-path`, `to:another-custom-route-path`, `once:`.  
+Once method will be called only once.
+```ts
+export default class DetailComponent extends View {
+	static meta: IViewMeta = {
+		transitions: {
+			'enter:': (node: IElement) => { ... },
+			'leave:': (node: IElement) => { ... },
+      'from:dashboard': (node: IElement) => { ... },      
+			'to:dashboard': (node: IElement) => { ... },   
+			'once:': (node: IElement) => { ... },
+		}
+	};
+}
+```
+On these properties you can return these type of values:
+```ts
+Observable<void> | Promise<void> | (() => void) | void;
+```
+___
+### Transitions
+To help you implement custom animations you can then use the `transition$` observable that has a complete event.
+```ts
+import { transition$, View } from 'rxcomp-router';
+
+export default class DetailComponent extends View {    
+	static meta: IViewMeta = {
+		transitions: {
+			'enter:': (node: IElement) => transition$(complete => {
+				gsap.set(node, { opacity: 0 });
+				gsap.to(node, {
+					opacity: 1,
+					duration: 1,
+					ease: Power3.easeInOut,
+					onComplete: () => {
+						complete(true);
+					}
+				});
+			}),
+		}
+	};
+}
+```
+<!--
+___
+### View component
 Extending the `View` component you obtain two new lifecycle methods: 
 `onEnter` and `onExit`. Both methods have this return type and should return a boolean value.   
 ```ts
@@ -226,6 +274,7 @@ export default class DetailComponent extends View {
     }
 }
 ```
+-->
 ___
 ### Browser Compatibility
 RxComp supports all browsers that are [ES5-compliant](http://kangax.github.io/compat-table/es5/) (IE8 and below are not supported).

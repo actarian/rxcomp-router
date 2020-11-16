@@ -141,7 +141,7 @@ var LocationStrategy = /** @class */ (function () {
             if (!popped) {
                 try {
                     var state = this.snapshotToState(snapshot);
-                    console.log('LocationStrategy.snapshotToState state', state);
+                    // console.log('LocationStrategy.snapshotToState state', state);
                     // console.log(state);
                     var title = document.title; // you can pass null as string cause title is a DOMString!
                     history.pushState(state, title, url);

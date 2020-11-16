@@ -13,7 +13,7 @@ export default class RouterOutletStructure extends Structure {
     onInit(): void;
     onChanges(): void;
     route$(): Observable<RouteSnapshot | undefined>;
-    factory$(snapshot: RouteSnapshot | undefined): Observable<boolean>;
+    factory$(snapshot: RouteSnapshot | undefined): Observable<void>;
     private onOnce$_;
     private onEnter$_;
     private onLeave$_;

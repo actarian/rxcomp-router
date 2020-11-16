@@ -7,7 +7,7 @@ import { IViewMeta, RouterKeyValue, transition$, View } from '../../../../src/rx
 export default class DetailComponent extends View {
 	onInit() {
 		// console.log('DetailComponent.onInit', this.route);
-		combineLatest(this.route.data$, this.route.params$).pipe(
+		combineLatest([this.route.data$, this.route.params$]).pipe(
 			takeUntil(this.unsubscribe$)
 		).subscribe((datas: RouterKeyValue[]) => {
 			const title = this.title = datas[0].title as string;
@@ -17,6 +17,7 @@ export default class DetailComponent extends View {
 			// console.log('DetailComponent', datas);
 		});
 	}
+	/*
 	onEnter(node: IElement) {
 		return transition$(complete => {
 			gsap.set(node, { opacity: 0 });
@@ -43,6 +44,7 @@ export default class DetailComponent extends View {
 			});
 		});
 	}
+	*/
 	static meta: IViewMeta = {
 		selector: '[detail-component]',
 		template: /* html */`

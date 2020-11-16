@@ -29,16 +29,18 @@ export default class RouterService {
 		const events$: ReplaySubject<RouterEvent> = this.events$;
 		const locationStrategy: ILocationStrategy = this.locationStrategy;
 		let currentRoute: RouteSnapshot | undefined;
+		let currentEvent: PopStateEvent | RouterEvent | undefined;
 		// console.log('RouterService.WINDOW', WINDOW!!);
 		const stateEvents$ = isPlatformServer ? EMPTY : fromEvent<PopStateEvent>(WINDOW, 'popstate').pipe(
 			map((event: PopStateEvent) => {
+				currentEvent = event;
 				const routerLink: string = `${document.location.pathname}${document.location.search}${document.location.hash}`;
 				/*
 				// !!! state to snapshot
 				const flatRoutes = getFlatRoutes_(routes);
 				flatRoutes.forEach(r => r.snapshot = undefined);
 				const snapshot: RouteSnapshot = locationStrategy.stateToSnapshot(flatRoutes, event.state) as RouteSnapshot;
-				console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
+				// console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
 				// console.log('RouterService PopStateEvent', 'snapshot', snapshot, 'routes', flatRoutes.map(route => route.snapshot));
 				return new NavigationEnd({ route: snapshot, routerLink, url: routerLink, trigger: 'popstate' });
 				*/
@@ -48,6 +50,7 @@ export default class RouterService {
 		);
 		return merge(stateEvents$, events$).pipe(
 			switchMap((event: RouterEvent) => {
+				currentEvent = event;
 				if (event instanceof GuardsCheckStart) {
 					return makeCanDeactivateResponse$_(events$, event, currentRoute).pipe(
 						switchMap((nextEvent: RouterEvent) => {
@@ -73,6 +76,7 @@ export default class RouterService {
 				}
 			}),
 			tap((event: RouterEvent) => {
+				currentEvent = event;
 				// console.log('RouterEvent', event);
 				if (event instanceof NavigationStart) {
 					// console.log('NavigationStart', event.routerLink);
@@ -138,7 +142,7 @@ export default class RouterService {
 					// console.log('RouteConfigLoadEnd', event);
 					events$.next(new NavigationEnd({ ...event }));
 				} else if (event instanceof NavigationEnd) {
-					console.log('NavigationEnd', event);
+					// console.log('NavigationEnd', event);
 					const segments: string[] = [];
 					let source: RouteSnapshot | undefined = event.route;
 					while (source != null) {
@@ -168,10 +172,10 @@ export default class RouterService {
 						events$.next(new NavigationStart({ routerLink: event.redirectTo, trigger: 'imperative' }));
 					}
 				} else if (event instanceof NavigationError) {
-					console.log('RouterService NavigationError', event.error);
+					console.warn('RouterService NavigationError', event.error);
 				}
 			}),
-			catchError((error: Error) => of(new NavigationError({ ...event, error }))),
+			catchError((error: Error) => of(new NavigationError({ ...(currentEvent || {}), error }))),
 			shareReplay(1),
 		);
 	}
@@ -271,9 +275,9 @@ function clearRoutes_(routes: Routes, currentSnapshot: RouteSnapshot): void {
 	flatRoutes.forEach((route: Route) => {
 		if (route.snapshot && snapshots.indexOf(route.snapshot) === -1) {
 			route.snapshot = undefined;
-		} else {
+		}/* else {
 			console.log(route);
-		}
+		}*/
 	});
 }
 function resolveRoutes_(routes: Routes, childRoutes: Routes, initialUrl: string, previousRoute?: RouteSnapshot): RouteSnapshot | undefined {

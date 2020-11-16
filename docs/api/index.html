@@ -76,19 +76,19 @@
 					</thead>
 					<tbody><tr>
 							<td align="left">rxcomp-router.min.js</td>
-							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js.svg?compression=gzip" alt=""></td>
+							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js.svg?compression=gzip" alt=""></td>
 						</tr>
 						<tr>
 							<td align="left">rxcomp-router.min.js</td>
-							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js.svg" alt=""></td>
+							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js.svg" alt=""></td>
 						</tr>
 						<tr>
 							<td align="left">rxcomp.min.js</td>
-							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js.svg?compression=gzip" alt=""></td>
+							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js.svg?compression=gzip" alt=""></td>
 						</tr>
 						<tr>
 							<td align="left">rxcomp.min.js</td>
-							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js.svg" alt=""></td>
+							<td align="left"><img src="https://img.badgesize.io/https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js.svg" alt=""></td>
 						</tr>
 						<tr>
 							<td align="left">rxjs.min.js</td>
@@ -118,8 +118,8 @@
 				</a>
 				<p>For CDN, you can use unpkg</p>
 				<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://unpkg.com/rxjs@6.6.2/bundles/rxjs.umd.min.js&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span> <span class="hljs-attr">SameSite</span>=<span class="hljs-string">&quot;none Secure&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://unpkg.com/rxcomp@1.0.0-beta.18/dist/umd/rxcomp.min.js&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span> <span class="hljs-attr">SameSite</span>=<span class="hljs-string">&quot;none Secure&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>  
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://unpkg.com/rxcomp-router@1.0.0-beta.18/dist/umd/rxcomp-router.min.js&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span> <span class="hljs-attr">SameSite</span>=<span class="hljs-string">&quot;none Secure&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>  </code></pre>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://unpkg.com/rxcomp@1.0.0-beta.19/dist/umd/rxcomp.min.js&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span> <span class="hljs-attr">SameSite</span>=<span class="hljs-string">&quot;none Secure&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>  
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://unpkg.com/rxcomp-router@1.0.0-beta.19/dist/umd/rxcomp-router.min.js&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span> <span class="hljs-attr">SameSite</span>=<span class="hljs-string">&quot;none Secure&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>  </code></pre>
 				<p>The global namespace for RxComp is <code>rxcomp</code></p>
 				<pre><code class="language-javascript"><span class="hljs-keyword">import</span> { CoreModule, Module } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;rxcomp&#x27;</span>;</code></pre>
 				<p>The global namespace for RxComp RouterModule is <code>rxcomp.router</code></p>
@@ -290,61 +290,109 @@ RouterModule.forRoot([
 				<a href="#view-component" id="view-component" style="color: inherit; text-decoration: none;">
 					<h3>View component</h3>
 				</a>
-				<p>Extending the <code>View</code> component you obtain two new lifecycle methods:
-				<code>onEnter</code> and <code>onExit</code>. Both methods have this return type and should return a boolean value.   </p>
-				<pre><code class="language-ts">Observable&lt;<span class="hljs-built_in">boolean</span>&gt; | <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">boolean</span>&gt; | (<span class="hljs-function">() =&gt;</span> <span class="hljs-built_in">boolean</span>) | <span class="hljs-built_in">boolean</span>;</code></pre>
-				<pre><code class="language-ts">
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">class</span> DetailComponent <span class="hljs-keyword">extends</span> View {
-    host!: RouterOutletStructure;
-    onEnter(node: IElement) {
-      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
-    }
-    onExit(node: IElement) {
-      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
-    }
-    <span class="hljs-keyword">static</span> meta: IFactoryMeta = {
-        selector: <span class="hljs-string">&#x27;[detail-component]&#x27;</span>,
-        hosts: { host: RouterOutletStructure },
-        template: <span class="hljs-comment">/* html */</span><span class="hljs-string">`
-          &lt;div class=&quot;title&quot;&gt;Detail {{detailId}}&lt;/div&gt;
-        `</span>,
+				<p>Extending the <code>View</code> component you obtain a new meta attribute <code>transitions</code>.
+					With this attribute you can create animations between the enter and leave state of a router view.<br>Just set an object with this custom properties <code>enter:</code>, <code>leave:</code>, <code>from:a-custom-route-path</code>, <code>to:another-custom-route-path</code>, <code>once:</code>.
+				Once method will be called only once.</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">class</span> DetailComponent <span class="hljs-keyword">extends</span> View {
+    <span class="hljs-keyword">static</span> meta: IViewMeta = {
+        transitions: {
+            <span class="hljs-string">&#x27;enter:&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> { ... },
+            <span class="hljs-string">&#x27;leave:&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> { ... },
+      <span class="hljs-string">&#x27;from:dashboard&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> { ... },      
+            <span class="hljs-string">&#x27;to:dashboard&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> { ... },   
+            <span class="hljs-string">&#x27;once:&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> { ... },
+        }
     };
 }</code></pre>
+				<p>On these properties you can return these type of values:</p>
+				<pre><code class="language-ts">Observable&lt;<span class="hljs-built_in">void</span>&gt; | <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt; | (<span class="hljs-function">() =&gt;</span> <span class="hljs-built_in">void</span>) | <span class="hljs-built_in">void</span>;</code></pre>
 				<hr>
 				<a href="#transitions" id="transitions" style="color: inherit; text-decoration: none;">
 					<h3>Transitions</h3>
 				</a>
-				<p>You can then use the <code>transition$</code> observable to implement custom animations.</p>
+				<p>To help you implement custom animations you can then use the <code>transition$</code> observable that has a complete event.</p>
 				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { transition$, View } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;rxcomp-router&#x27;</span>;
 
-<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">class</span> DetailComponent <span class="hljs-keyword">extends</span> View {
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">class</span> DetailComponent <span class="hljs-keyword">extends</span> View {    
+    <span class="hljs-keyword">static</span> meta: IViewMeta = {
+        transitions: {
+            <span class="hljs-string">&#x27;enter:&#x27;</span>: <span class="hljs-function">(<span class="hljs-params">node: IElement</span>) =&gt;</span> transition$(complete =&gt; {
+                gsap.set(node, { opacity: <span class="hljs-number">0</span> });
+                gsap.to(node, {
+                    opacity: <span class="hljs-number">1</span>,
+                    duration: <span class="hljs-number">1</span>,
+                    ease: Power3.easeInOut,
+                    onComplete: <span class="hljs-function">() =&gt;</span> {
+                        complete(<span class="hljs-literal">true</span>);
+                    }
+                });
+            }),
+        }
+    };
+}</code></pre>
+				<!--
+___
+### View component
+Extending the `View` component you obtain two new lifecycle methods: 
+`onEnter` and `onExit`. Both methods have this return type and should return a boolean value.   
+```ts
+Observable<boolean> | Promise<boolean> | (() => boolean) | boolean;
+```
+```ts
+
+export default class DetailComponent extends View {
+    host!: RouterOutletStructure;
     onEnter(node: IElement) {
-        <span class="hljs-keyword">return</span> transition$(complete =&gt; {
-            gsap.set(node, { opacity: <span class="hljs-number">0</span> });
+      return true;
+    }
+    onExit(node: IElement) {
+      return true;
+    }
+    static meta: IFactoryMeta = {
+        selector: '[detail-component]',
+        hosts: { host: RouterOutletStructure },
+        template: /* html */`
+          <div class="title">Detail {{detailId}}</div>
+        `,
+    };
+}
+```
+___
+### Transitions
+You can then use the `transition$` observable to implement custom animations.
+```ts
+import { transition$, View } from 'rxcomp-router';
+
+export default class DetailComponent extends View {
+    onEnter(node: IElement) {
+        return transition$(complete => {
+            gsap.set(node, { opacity: 0 });
             gsap.to(node, {
-                opacity: <span class="hljs-number">1</span>,
-                duration: <span class="hljs-number">1</span>,
+                opacity: 1,
+                duration: 1,
                 ease: Power3.easeInOut,
-                onComplete: <span class="hljs-function">() =&gt;</span> {
-                    complete(<span class="hljs-literal">true</span>);
+                onComplete: () => {
+                    complete(true);
                 }
             });
         });
     }
     onExit(node: IElement) {
-        <span class="hljs-keyword">return</span> transition$(complete =&gt; {
-            gsap.set(node, { opacity: <span class="hljs-number">1</span> });
+        return transition$(complete => {
+            gsap.set(node, { opacity: 1 });
             gsap.to(node, {
-                opacity: <span class="hljs-number">0</span>,
-                duration: <span class="hljs-number">1</span>,
+                opacity: 0,
+                duration: 1,
                 ease: Power3.easeInOut,
-                onComplete: <span class="hljs-function">() =&gt;</span> {
-                    complete(<span class="hljs-literal">true</span>);
+                onComplete: () => {
+                    complete(true);
                 }
             });
         });
     }
-}</code></pre>
+}
+```
+-->
 				<hr>
 				<a href="#browser-compatibility" id="browser-compatibility" style="color: inherit; text-decoration: none;">
 					<h3>Browser Compatibility</h3>
@@ -383,7 +431,7 @@ RouterModule.forRoot([
 					<h2>Contact</h2>
 				</a>
 				<ul>
-					<li>Luca Zampetti <a href="mailto:&#x6c;&#122;&#x61;&#109;&#x70;&#101;&#x74;&#116;&#x69;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2e;&#99;&#x6f;&#109;">&#x6c;&#122;&#x61;&#109;&#x70;&#101;&#x74;&#116;&#x69;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2e;&#99;&#x6f;&#109;</a></li>
+					<li>Luca Zampetti <a href="mailto:&#108;&#122;&#x61;&#109;&#x70;&#x65;&#116;&#116;&#x69;&#64;&#103;&#109;&#97;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#x6d;">&#108;&#122;&#x61;&#109;&#x70;&#x65;&#116;&#116;&#x69;&#64;&#103;&#109;&#97;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#x6d;</a></li>
 					<li>Follow <a href="https://twitter.com/actarian">@actarian</a> on Twitter</li>
 				</ul>
 				<p><a href="https://twitter.com/actarian"><img src="https://img.shields.io/twitter/follow/actarian.svg?style=social&label=Follow%20@actarian" alt="Twitter Follow"></a>  </p>

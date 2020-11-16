@@ -8,7 +8,7 @@ export default class DataComponent extends Component {
 	onInit() {
 		const route = this.host.route;
 		if (route) {
-			combineLatest(route.data$, route.params$).pipe(
+			combineLatest([route.data$, route.params$]).pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe((datas: RouterKeyValue[]) => {
 				const title = this.title = datas[0].title as string;

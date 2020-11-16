@@ -1,5 +1,5 @@
 /**
- * @license rxcomp-router v1.0.0-beta.18
+ * @license rxcomp-router v1.0.0-beta.19
  * (c) 2020 Luca Zampetti <lzampetti@gmail.com>
  * License: MIT
  */
@@ -399,8 +399,8 @@ var View = /*#__PURE__*/function (_Component) {
       // } else {
       if (!popped) {
         try {
-          var state = this.snapshotToState(snapshot);
-          console.log('LocationStrategy.snapshotToState state', state); // console.log(state);
+          var state = this.snapshotToState(snapshot); // console.log('LocationStrategy.snapshotToState state', state);
+          // console.log(state);
 
           var title = document.title; // you can pass null as string cause title is a DOMString!
 
@@ -1025,16 +1025,18 @@ Scroll {routerEvent: NavigationEnd, position: null, anchor: null, constructor: O
     var route$ = this.route$;
     var events$ = this.events$;
     var locationStrategy = this.locationStrategy;
-    var currentRoute; // console.log('RouterService.WINDOW', WINDOW!!);
+    var currentRoute;
+    var currentEvent; // console.log('RouterService.WINDOW', WINDOW!!);
 
     var stateEvents$ = rxcomp.isPlatformServer ? rxjs.EMPTY : rxjs.fromEvent(rxcomp.WINDOW, 'popstate').pipe(operators.map(function (event) {
+      currentEvent = event;
       var routerLink = "" + document.location.pathname + document.location.search + document.location.hash;
       /*
       // !!! state to snapshot
       const flatRoutes = getFlatRoutes_(routes);
       flatRoutes.forEach(r => r.snapshot = undefined);
       const snapshot: RouteSnapshot = locationStrategy.stateToSnapshot(flatRoutes, event.state) as RouteSnapshot;
-      console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
+      // console.log('LocationStrategy.stateToSnapshot snapshot', snapshot);
       // console.log('RouterService PopStateEvent', 'snapshot', snapshot, 'routes', flatRoutes.map(route => route.snapshot));
       return new NavigationEnd({ route: snapshot, routerLink, url: routerLink, trigger: 'popstate' });
       */
@@ -1045,6 +1047,8 @@ Scroll {routerEvent: NavigationEnd, position: null, anchor: null, constructor: O
       });
     }), operators.shareReplay(1));
     return rxjs.merge(stateEvents$, events$).pipe(operators.switchMap(function (event) {
+      currentEvent = event;
+
       if (event instanceof GuardsCheckStart) {
         return makeCanDeactivateResponse$_(events$, event, currentRoute).pipe(operators.switchMap(function (nextEvent) {
           if (nextEvent instanceof NavigationCancel) {
@@ -1065,7 +1069,8 @@ Scroll {routerEvent: NavigationEnd, position: null, anchor: null, constructor: O
         return rxjs.of(event);
       }
     }), operators.tap(function (event) {
-      // console.log('RouterEvent', event);
+      currentEvent = event; // console.log('RouterEvent', event);
+
       if (event instanceof NavigationStart) {
         var _currentRoute$childre;
 
@@ -1138,7 +1143,7 @@ Scroll {routerEvent: NavigationEnd, position: null, anchor: null, constructor: O
         // console.log('RouteConfigLoadEnd', event);
         events$.next(new NavigationEnd(_objectSpread2({}, event)));
       } else if (event instanceof NavigationEnd) {
-        console.log('NavigationEnd', event);
+        // console.log('NavigationEnd', event);
         var segments = [];
         var source = event.route;
 
@@ -1179,10 +1184,10 @@ Scroll {routerEvent: NavigationEnd, position: null, anchor: null, constructor: O
           }));
         }
       } else if (event instanceof NavigationError) {
-        console.log('RouterService NavigationError', event.error);
+        console.warn('RouterService NavigationError', event.error);
       }
     }), operators.catchError(function (error) {
-      return rxjs.of(new NavigationError(_objectSpread2(_objectSpread2({}, event), {}, {
+      return rxjs.of(new NavigationError(_objectSpread2(_objectSpread2({}, currentEvent || {}), {}, {
         error: error
       })));
     }), operators.shareReplay(1));
@@ -1336,9 +1341,11 @@ function clearRoutes_(routes, currentSnapshot) {
   flatRoutes.forEach(function (route) {
     if (route.snapshot && snapshots.indexOf(route.snapshot) === -1) {
       route.snapshot = undefined;
-    } else {
-      console.log(route);
     }
+    /* else {
+      console.log(route);
+    }*/
+
   });
 }
 
@@ -1649,8 +1656,8 @@ get urlTree(): UrlTree {
     var _path$route;
 
     var path = RouterService.getPath(this.host.routerLink);
-    var isActive = ((_path$route = path.route) == null ? void 0 : _path$route.snapshot) != null;
-    console.log('RouterLinkActive.isActive', isActive, path.route);
+    var isActive = ((_path$route = path.route) == null ? void 0 : _path$route.snapshot) != null; // console.log('RouterLinkActive.isActive', isActive, path.route);
+
     return isActive;
   };
 
@@ -1790,7 +1797,7 @@ function sessionStorageSet_(key, value) {
           _this4.element = undefined;
           _this4.instance = undefined;
         }
-      }), operators.switchMap(function (leaved) {
+      }), operators.switchMap(function () {
         if (snapshot && factory && factory.meta.template) {
           var element = document.createElement('div');
           element.innerHTML = factory.meta.template;
@@ -1807,15 +1814,15 @@ function sessionStorageSet_(key, value) {
           _this4.instance = instance;
           _this4.element = element;
           snapshot.element = element;
-          return _this4.onOnce$_(snapshot, element, instance).pipe(operators.switchMap(function (onced) {
+          return _this4.onOnce$_(snapshot, element, instance).pipe(operators.switchMap(function () {
             return _this4.onEnter$_(snapshot, element, instance);
           }));
         } else {
-          return rxjs.of(false);
+          return rxjs.of(void 0);
         }
       }));
     } else {
-      return rxjs.of(false);
+      return rxjs.of(void 0);
     }
   }
   /*
@@ -1845,9 +1852,9 @@ function sessionStorageSet_(key, value) {
 
         return x instanceof OnceTransition && x.matcher((_snapshot$previousRou = snapshot.previousRoute) == null ? void 0 : _snapshot$previousRou.path);
       });
-      return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : rxjs.of(true);
+      return transition ? asObservable([element, snapshot.previousRoute], transition.callback.bind(instance)) : rxjs.of(void 0);
     } else {
-      return rxjs.of(true);
+      return rxjs.of(void 0);
     }
   };
 
@@ -1859,9 +1866,9 @@ function sessionStorageSet_(key, value) {
 
         return x instanceof EnterTransition && x.matcher((_snapshot$previousRou2 = snapshot.previousRoute) == null ? void 0 : _snapshot$previousRou2.path);
       });
-      return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : rxjs.of(true);
+      return transition ? asObservable([element, snapshot.previousRoute], transition.callback.bind(instance)) : rxjs.of(void 0);
     } else {
-      return rxjs.of(true);
+      return rxjs.of(void 0);
     }
   };
 
@@ -1871,9 +1878,9 @@ function sessionStorageSet_(key, value) {
       var transition = factory.transitions.find(function (x) {
         return x instanceof LeaveTransition && x.matcher(snapshot == null ? void 0 : snapshot.path);
       });
-      return transition ? asObservable([element, snapshot], transition.callback) : rxjs.of(true);
+      return transition ? asObservable([element, snapshot], transition.callback.bind(instance)) : rxjs.of(void 0);
     } else {
-      return rxjs.of(true);
+      return rxjs.of(void 0);
     }
   };
 

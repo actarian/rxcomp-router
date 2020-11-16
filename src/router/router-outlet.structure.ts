@@ -49,7 +49,7 @@ export default class RouterOutletStructure extends Structure {
 			}),
 		);
 	}
-	factory$(snapshot: RouteSnapshot | undefined): Observable<boolean> {
+	factory$(snapshot: RouteSnapshot | undefined): Observable<void> {
 		const { module, node } = getContext(this);
 		const factory: typeof Component | undefined = snapshot?.component;
 		if (this.factory_ !== factory) {
@@ -63,7 +63,7 @@ export default class RouterOutletStructure extends Structure {
 						this.instance = undefined;
 					}
 				}),
-				switchMap((leaved: boolean) => {
+				switchMap(() => {
 					if (snapshot && factory && factory.meta.template) {
 						let element: IElement = document.createElement('div');
 						element.innerHTML = factory.meta.template;
@@ -77,17 +77,17 @@ export default class RouterOutletStructure extends Structure {
 						this.element = element;
 						snapshot.element = element;
 						return this.onOnce$_(snapshot, element, instance).pipe(
-							switchMap((onced: boolean) => {
+							switchMap(() => {
 								return this.onEnter$_(snapshot, element, instance);
 							})
 						);
 					} else {
-						return of(false);
+						return of(void 0);
 					}
 				})
 			);
 		} else {
-			return of(false);
+			return of(void 0);
 		}
 	}
 	/*
@@ -106,32 +106,32 @@ export default class RouterOutletStructure extends Structure {
 		}
 	}
 	*/
-	private onOnce$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+	private onOnce$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<void> {
 		if (!transitionOnced() && instance instanceof View && element) {
 			transitionOnce();
 			const factory = instance.constructor as unknown as View;
 			const transition: OnceTransition = factory.transitions.find((x: Transition) => x instanceof OnceTransition && x.matcher(snapshot.previousRoute?.path));
-			return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : of(true);
+			return transition ? asObservable<void>([element, snapshot.previousRoute], transition.callback.bind(instance)) : of(void 0);
 		} else {
-			return of(true);
+			return of(void 0);
 		}
 	}
-	private onEnter$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+	private onEnter$_(snapshot: RouteSnapshot, element?: IElement, instance?: Component): Observable<void> {
 		if (instance instanceof View && element) {
 			const factory = instance.constructor as unknown as View;
 			const transition: EnterTransition = factory.transitions.find((x: Transition) => x instanceof EnterTransition && x.matcher(snapshot.previousRoute?.path));
-			return transition ? asObservable([element, snapshot.previousRoute], transition.callback) : of(true);
+			return transition ? asObservable<void>([element, snapshot.previousRoute], transition.callback.bind(instance)) : of(void 0);
 		} else {
-			return of(true);
+			return of(void 0);
 		}
 	}
-	private onLeave$_(snapshot?: RouteSnapshot, element?: IElement, instance?: Component): Observable<boolean> {
+	private onLeave$_(snapshot?: RouteSnapshot, element?: IElement, instance?: Component): Observable<void> {
 		if (instance instanceof View && element) {
 			const factory = instance.constructor as unknown as View;
 			const transition: LeaveTransition = factory.transitions.find((x: Transition) => x instanceof LeaveTransition && x.matcher(snapshot?.path));
-			return transition ? asObservable([element, snapshot], transition.callback) : of(true);
+			return transition ? asObservable<void>([element, snapshot], transition.callback.bind(instance)) : of(void 0);
 		} else {
-			return of(true);
+			return of(void 0);
 		}
 	}
 	static meta: IFactoryMeta = {

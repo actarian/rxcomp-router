@@ -66,7 +66,7 @@ var RouterOutletStructure = /** @class */ (function (_super) {
                     _this.element = undefined;
                     _this.instance = undefined;
                 }
-            }), operators_1.switchMap(function (leaved) {
+            }), operators_1.switchMap(function () {
                 if (snapshot && factory && factory.meta.template) {
                     var element_1 = document.createElement('div');
                     element_1.innerHTML = factory.meta.template;
@@ -79,17 +79,17 @@ var RouterOutletStructure = /** @class */ (function (_super) {
                     _this.instance = instance_1;
                     _this.element = element_1;
                     snapshot.element = element_1;
-                    return _this.onOnce$_(snapshot, element_1, instance_1).pipe(operators_1.switchMap(function (onced) {
+                    return _this.onOnce$_(snapshot, element_1, instance_1).pipe(operators_1.switchMap(function () {
                         return _this.onEnter$_(snapshot, element_1, instance_1);
                     }));
                 }
                 else {
-                    return rxjs_1.of(false);
+                    return rxjs_1.of(void 0);
                 }
             }));
         }
         else {
-            return rxjs_1.of(false);
+            return rxjs_1.of(void 0);
         }
     };
     /*
@@ -113,30 +113,30 @@ var RouterOutletStructure = /** @class */ (function (_super) {
             transition_1.transitionOnce();
             var factory = instance.constructor;
             var transition = factory.transitions.find(function (x) { var _a; return x instanceof view_1.OnceTransition && x.matcher((_a = snapshot.previousRoute) === null || _a === void 0 ? void 0 : _a.path); });
-            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback) : rxjs_1.of(true);
+            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback.bind(instance)) : rxjs_1.of(void 0);
         }
         else {
-            return rxjs_1.of(true);
+            return rxjs_1.of(void 0);
         }
     };
     RouterOutletStructure.prototype.onEnter$_ = function (snapshot, element, instance) {
         if (instance instanceof view_1.default && element) {
             var factory = instance.constructor;
             var transition = factory.transitions.find(function (x) { var _a; return x instanceof view_1.EnterTransition && x.matcher((_a = snapshot.previousRoute) === null || _a === void 0 ? void 0 : _a.path); });
-            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback) : rxjs_1.of(true);
+            return transition ? observable_1.asObservable([element, snapshot.previousRoute], transition.callback.bind(instance)) : rxjs_1.of(void 0);
         }
         else {
-            return rxjs_1.of(true);
+            return rxjs_1.of(void 0);
         }
     };
     RouterOutletStructure.prototype.onLeave$_ = function (snapshot, element, instance) {
         if (instance instanceof view_1.default && element) {
             var factory = instance.constructor;
             var transition = factory.transitions.find(function (x) { return x instanceof view_1.LeaveTransition && x.matcher(snapshot === null || snapshot === void 0 ? void 0 : snapshot.path); });
-            return transition ? observable_1.asObservable([element, snapshot], transition.callback) : rxjs_1.of(true);
+            return transition ? observable_1.asObservable([element, snapshot], transition.callback.bind(instance)) : rxjs_1.of(void 0);
         }
         else {
-            return rxjs_1.of(true);
+            return rxjs_1.of(void 0);
         }
     };
     RouterOutletStructure.meta = {

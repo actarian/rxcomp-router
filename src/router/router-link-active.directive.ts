@@ -31,7 +31,7 @@ export default class RouterLinkActiveDirective extends Directive {
 	isActive(): boolean {
 		const path: RoutePath = RouterService.getPath(this.host.routerLink);
 		const isActive: boolean = path.route?.snapshot != null;
-		console.log('RouterLinkActive.isActive', isActive, path.route);
+		// console.log('RouterLinkActive.isActive', isActive, path.route);
 		return isActive;
 	}
 	static meta: IFactoryMeta = {
